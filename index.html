@@ -76,6 +76,18 @@ dialog{border:1.5px solid var(--accent);border-radius:20px;padding:0;width:min(5
 dialog[open]{animation:up .28s ease-out}
 dialog::backdrop{background:rgba(25,15,5,.6)}
 @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.btn.rec{background:#b3261e;color:#fff;border-color:#b3261e;animation:recring 1.4s ease-out infinite}
+@keyframes recring{0%{box-shadow:0 0 0 0 rgba(179,38,30,.55)}100%{box-shadow:0 0 0 12px rgba(179,38,30,0)}}
+.recbar{display:flex;align-items:center;gap:10px;margin:6px 0;padding:8px 12px;border-radius:10px;background:rgba(179,38,30,.12);border:1.5px solid #b3261e;color:#b3261e;font-weight:600}
+.recbar[hidden]{display:none}
+.recdot{width:12px;height:12px;border-radius:50%;background:#b3261e;flex:none;animation:recblink 1s ease-in-out infinite}
+@keyframes recblink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+.recbar .tm{font-variant-numeric:tabular-nums;font-weight:600}
+.eq{display:inline-flex;align-items:center;gap:3px;height:22px;margin-left:auto}
+.eq i{display:block;width:4px;height:100%;background:#b3261e;border-radius:2px;transform-origin:center;animation:eq .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+@keyframes eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.btn.rec,.recdot,.eq i{animation:none}}
 details.web{border:1.5px dashed var(--accent);border-radius:12px;padding:10px 12px;margin:4px 0 8px}
 details.web summary{cursor:pointer;font-weight:600}
 .srcl{display:block;text-align:center;margin:10px 0 0;font-size:.9rem;color:var(--text);word-break:break-all}
@@ -238,7 +250,7 @@ body{-webkit-font-smoothing:antialiased}
 .card{box-shadow:0 1px 2px rgba(60,40,20,.12),0 8px 18px -10px rgba(60,40,20,.3)}
 @media (hover:hover){.card{transition:transform .15s,box-shadow .15s}.card:hover{transform:translateY(-2px);box-shadow:0 10px 22px -10px rgba(60,40,20,.4)}}
 .info h3{letter-spacing:.005em}
-.card,#dView{--text:#3f3126;--muted:#7a6650;--border:#b39a70;--card:#f1e3c6;--accent:#4b3b2f;--onaccent:#f1e3c6;--lemon:#c98f2a;--danger:#8f2d1c;--tile:#c7ad82;--tilebg:#e9d8b4;color:var(--text);background:radial-gradient(ellipse at 15% 10%,rgba(255,250,235,.55),transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(130,85,35,.3),transparent 60%),var(--grain),#efdcb4}
+.card,#dView,#dCook{--text:#3f3126;--muted:#7a6650;--border:#b39a70;--card:#f1e3c6;--accent:#4b3b2f;--onaccent:#f1e3c6;--lemon:#c98f2a;--danger:#8f2d1c;--tile:#c7ad82;--tilebg:#e9d8b4;color:var(--text);background:radial-gradient(ellipse at 15% 10%,rgba(255,250,235,.55),transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(130,85,35,.3),transparent 60%),var(--grain),#efdcb4}
 .card{position:relative;overflow:hidden;border:1px solid #a98b5c;border-radius:3px 6px 4px 7px;padding:8px;box-shadow:inset 0 0 26px rgba(120,80,30,.28),0 2px 3px rgba(60,40,20,.25),0 12px 18px -12px rgba(60,40,20,.5)}
 .card::before{content:"";position:absolute;left:-14px;bottom:-16px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(110,70,30,.2),transparent 65%);pointer-events:none}
 .card:nth-child(even)::before{left:auto;right:-16px;bottom:auto;top:46%}
@@ -376,7 +388,31 @@ body>#printArea{display:block!important}
 /* bordatura sottile ben visibile sui chiudi */
 .xbtn,.actions #bkClose,.actions #pBack{border:1px solid color-mix(in srgb,var(--accent) 65%,transparent)}
 /* ricetta selezionata: riquadro illuminato soffuso */
+.card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.card img{-webkit-user-drag:none}.card.lpress{transform:scale(.97)}
 .card:focus,.card:focus-visible{outline:none}
+/* menu aperto: sopra al pulsante "Nuova ricetta" e sempre dentro lo schermo */
+.bar.up,.bar:has(.ddpanel:not([hidden])){z-index:30}
+.ddpanel.scr{box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ddpanel.scr::before{display:none}
+.ddpanel{scrollbar-width:none;-ms-overflow-style:none}.ddpanel::-webkit-scrollbar{display:none;width:0;height:0}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:9999;max-width:min(92vw,420px);display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:14px;background:#3f3126;color:#f1e3c6;font:600 .9rem var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#toast button{border:none;background:none;color:#f0c46a;font:700 .9rem var(--sans);padding:6px 4px;white-space:nowrap}
+
+/* cestino */
+.tools .icon{position:relative}
+.tbadge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--lemon);color:var(--onlemon,#fff);font:700 .68rem/18px var(--sans);text-align:center}
+.tbadge[hidden]{display:none}
+@media (min-width:601px){.mast{min-height:290px;box-sizing:border-box}}
+.trow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dotted var(--border)}
+.trow .tt{flex:1;min-width:0}
+.trow .tt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .tt small{color:var(--muted)}
+.trow .btn{flex:none;min-height:38px;padding:6px 12px;font-size:.82rem}
+.tempty{text-align:center;color:var(--muted);padding:22px 0}
+#dTrash .actions #trClose{flex:0 0 auto}
+#dTrash .actions #trRestAll,#dTrash .actions #trEmpty{white-space:nowrap;font-size:.9rem;padding-left:10px;padding-right:10px}
+
 /* chiudi e stampa: più staccati dallo sfondo */
 .xbtn{background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--accent);color:var(--accent);box-shadow:0 1px 4px rgba(40,25,10,.22)}
 .xbtn:active{background:var(--card)}
@@ -408,6 +444,66 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 .hdel{flex:none;width:36px;height:36px;margin:0;padding:0;border-radius:50%;border:1px solid var(--border);background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer}
 .hdel .ico{width:15px;height:15px}
 .hdel:hover,.hdel:active{color:var(--danger);border-color:var(--danger)}
+
+/* promemoria backup */
+.bkban{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;justify-content:space-between;align-self:center;width:calc(100% - 24px);max-width:876px;margin:8px 12px 0;padding:9px 12px;border-radius:12px;border:1.5px dashed var(--accent);background:color-mix(in srgb,var(--card) 80%,transparent);color:var(--text);font:600 .88rem/1.3 var(--sans)}
+.bkban[hidden]{display:none}
+.bkban .bkbt{display:flex;gap:8px;margin-left:auto}
+.bkban button{min-height:40px;padding:6px 14px;border-radius:999px;font:700 .85rem var(--sans);border:1.5px solid var(--accent);background:transparent;color:var(--text)}
+.bkban button.go{background:var(--accent);color:var(--onaccent)}
+.icon.due{position:relative}
+.icon.due::after{content:"";position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--danger);border:2px solid var(--bg)}
+/* modalità cucina */
+.ckbtn{right:auto;left:-8px}
+#dCook{width:min(760px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;margin:0 auto;border-radius:0;border-width:0 1.5px;overflow:hidden}
+#dCook[open]{display:flex;flex-direction:column}
+#dCook .ckhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 8px;border-bottom:1px double var(--border)}
+#dCook #ckClose{order:2;margin-left:auto}
+#dCook .ckt{order:3;flex:0 0 100%;min-width:0;font:400 1.7rem/1.15 "Yellowtail",cursive;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dCook .ckb{flex:none;min-width:54px;height:54px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:700 1.15rem var(--sans)}
+#dCook .cksun{flex:none;text-align:center;padding:5px 12px;color:var(--muted);font:600 .76rem var(--sans)}
+#dCook .ckmain{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 28px;font-family:"IM Fell English",Georgia,serif;font-size:1.4rem;line-height:1.35}
+#dCook .ckmain h3{display:flex;align-items:center;gap:12px;justify-content:center;margin:18px 0 8px;font:400 1.5em/1.1 "Yellowtail",cursive}
+#dCook .ckmain h3::before,#dCook .ckmain h3::after{content:"";flex:1;height:1px;background:var(--border)}
+.cking,.ckst{list-style:none;margin:0;padding:0}
+.cking li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px dotted var(--border);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.cking li::before{content:"";flex:none;width:1em;height:1em;border:2px solid var(--accent);border-radius:50%}
+.cking li.done{opacity:.45;text-decoration:line-through}
+.cking li.done::before{background:var(--accent)}
+.ckst{counter-reset:s}
+.ckst li{counter-increment:s;position:relative;margin-bottom:6px;padding:12px 8px 14px 3em;border-left:4px solid transparent;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.ckst li::before{content:counter(s,upper-roman) ".";position:absolute;left:6px;top:12px;width:2.4em;color:var(--accent);font-size:1.05em}
+.ckst li.cur{background:color-mix(in srgb,var(--lemon) 20%,transparent);border-left-color:var(--lemon)}
+.ckst li.done{opacity:.45}
+.ckst li.done .sx{text-decoration:line-through}
+.ckchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ckchip{min-height:48px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:700 .9rem var(--sans)}
+#dCook .cktray{flex:none;display:flex;flex-direction:column;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px double var(--border)}
+#dCook .cktray:empty{display:none}
+.cktm{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:var(--accent);color:var(--onaccent);font:700 .95rem var(--sans)}
+.cktm .t{font-size:1.3rem;font-variant-numeric:tabular-nums;min-width:3.4em}
+.cktm .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;opacity:.9}
+.cktm button{min-width:48px;min-height:46px;padding:0 10px;border:1.5px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:700 .9rem var(--sans)}
+.cktm.ring{background:#b3261e;color:#fff;animation:ckring .6s ease-in-out infinite alternate}
+@keyframes ckring{to{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.cktm.ring{animation:none}}
+#dCook .ckset{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 12px;border-top:1px double var(--border);max-height:62dvh;overflow-y:auto}
+#dCook .ckset[hidden]{display:none}
+.ckdial{width:min(60vw,236px);height:auto;flex:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.ckdial .face{fill:var(--card);stroke:var(--accent);stroke-width:3}
+.ckdial .tk{stroke:var(--accent);stroke-linecap:round}
+.ckdial .lb{fill:var(--text);font:600 12px var(--sans);text-anchor:middle;dominant-baseline:central}
+.ckdial .wg{fill:var(--lemon);fill-opacity:.55}
+.ckdial .kn{fill:var(--accent);stroke:var(--card);stroke-width:2.5}
+.ckdial .hub{fill:var(--card);stroke:var(--accent);stroke-width:2}
+.ckdial .tx{fill:var(--text);font-weight:700;font-family:var(--sans);text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.ckstep{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.ckstep button{min-height:48px;min-width:60px;padding:0 12px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:700 .9rem var(--sans)}
+.ckact{display:flex;align-items:center;gap:8px}
+.ckgo{min-height:54px;padding:0 28px;border-radius:999px;border:none;background:var(--accent);color:var(--onaccent);font:700 1rem var(--sans)}
+.ckname{width:100%;max-width:320px;min-height:48px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:600 1rem var(--sans);text-align:center}
+.ckchip.on{background:var(--lemon);border-color:var(--lemon);color:#2b2118}
+#dCook .cktray{max-height:34dvh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -419,19 +515,19 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 <path class="ln" pathLength="1" d="M60 140 C68 62 232 62 240 140"/>
 <g transform="rotate(-6 40 120)"><path class="ln" pathLength="1" d="M31 84 V108 M40 82 V108 M49 84 V108 M31 108 C31 120 49 120 49 108 M40 118 V176"/></g>
 <g transform="rotate(6 262 130)"><ellipse class="fl" cx="262" cy="100" rx="11" ry="18"/><path class="ln" pathLength="1" d="M262 118 V176"/></g></svg>
-  <p class="sp-mio">il</p>
-  <p class="sp-title">Ricettario<span class="per">per GIOIRE</span></p>
+  <p class="sp-mio">le</p>
+  <p class="sp-title">Ricette<span class="per">per GIOIRE</span></p>
   <p class="sp-sub">Quaderno di ricette<br>da scrivere e sfogliare</p>
   <p class="sp-count" id="spCount"></p>
-  <button class="sp-go" id="spGo">Apri il ricettario</button>
+  <button class="sp-go" id="spGo">Apri le ricette</button>
 </div>
 <i class="pg-side l"></i><i class="pg-side r"></i><i class="pg-frame" aria-hidden="true"></i>
 <header>
   <div class="wrap mast">
-    <div class="tools"><button class="icon" id="helpBtn" title="Cosa cucino? Cerca per ingredienti" aria-label="Cosa cucino? Cerca per ingredienti"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg></button><button class="icon" id="favBtn" title="Solo preferiti" aria-label="Solo preferiti">♡</button><button class="icon" id="bkBtn" title="Backup" aria-label="Backup"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button><button class="icon" id="propBtn" title="Strumenti" aria-label="Strumenti"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><circle cx="12" cy="6" r="1.3" fill="currentColor"/><circle cx="12" cy="18" r="1.3" fill="currentColor"/></svg></button></div>
+    <div class="tools"><button class="icon" id="helpBtn" title="Cosa cucino? Cerca per ingredienti" aria-label="Cosa cucino? Cerca per ingredienti"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg></button><button class="icon" id="favBtn" title="Solo preferiti" aria-label="Solo preferiti">♡</button><button class="icon" id="bkBtn" title="Backup" aria-label="Backup"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button><button class="icon" id="trBtn" title="Cestino" aria-label="Cestino"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span class="tbadge" id="trBadge" hidden></span></button><button class="icon" id="propBtn" title="Strumenti" aria-label="Strumenti"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><circle cx="12" cy="6" r="1.3" fill="currentColor"/><circle cx="12" cy="18" r="1.3" fill="currentColor"/></svg></button></div>
     <svg class="hat" viewBox="104 -8 94 90" aria-hidden="true"><g transform="translate(0,-22)"><path d="M126 62 C112 60 110 42 126 40 C124 26 146 18 156 28 C166 20 186 30 180 42 C194 46 188 62 176 62"/><rect x="124" y="62" width="54" height="14" rx="2"/><path d="M140 48 V60 M150 46 V60 M160 48 V60"/><path fill="currentColor" stroke="none" d="M151 94 C141 82 129 86 123 92 C119 98 131 98 137 94 C143 99 147 97 151 95 C155 97 159 99 165 94 C171 98 183 98 179 92 C173 86 161 82 151 94Z"/></g></svg>
-    <p class="mio">il</p>
-    <h1>Ricettario<span class="per">per GIOIRE</span></h1>
+    <p class="mio">le</p>
+    <h1>Ricette<span class="per">per GIOIRE</span></h1>
     <div class="count" id="count"></div>
     <div class="div"><svg viewBox="0 0 84 22"><path d="M42 3 L50 11 L42 19 L34 11Z"/><path d="M30 11 C24 3 14 3 12 9 C11 13 17 14 18 10"/><path d="M54 11 C60 3 70 3 72 9 C73 13 67 14 66 10"/><circle cx="42" cy="11" r="1.3" fill="currentColor"/></svg></div>
   </div>
@@ -439,6 +535,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
     <div class="filters"><input id="q" type="search" placeholder="Cerca ricetta o ingrediente"><div class="dd" id="dd"><button type="button" class="ddbtn" id="catBtn" aria-haspopup="listbox" aria-expanded="false"><span id="catLbl">Menu</span></button><div class="ddpanel" id="catList" role="listbox" aria-label="Menu" hidden></div></div><div class="ddpanel hist" id="hist" role="region" aria-label="Ricerche recenti" hidden></div></div>
   </div></div>
 </header>
+<div class="bkban" id="bkBan" role="status" hidden><span id="bkTxt"></span><span class="bkbt"><button type="button" class="go" id="bkNow">Salva ora</button><button type="button" id="bkLater">Più tardi</button></span></div>
 <div class="boxwrap"><div class="box"><main id="list"></main></div><button class="fab" id="add" aria-label="Nuova ricetta">Nuova ricetta</button></div>
 
 <dialog id="dForm"><div class="body">
@@ -446,10 +543,10 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
   <h2 id="fTitle">Nuova ricetta</h2>
   <details class="web" id="webBox"><summary>Carica ricetta</summary>
     <p class="meta2">Apri la ricetta nel browser, seleziona e copia tutto il testo (titolo, ingredienti, procedimento), poi incollalo qui sotto: i campi si compilano da soli e puoi correggerli.</p>
-    <div class="actions"><button type="button" class="btn sec" id="ocrCamBtn">📸 Fotografa la ricetta</button><button type="button" class="btn sec" id="ocrBtn">📷 Leggi da screenshot</button></div>
-    <input type="file" id="ocrIn" accept="image/*" multiple hidden>
-    <input type="file" id="ocrCam" accept="image/*" capture="environment" hidden>
-    <p class="meta2" id="ocrMsg">Scegli uno o più screenshot (in ordine, dall'alto in basso). Il testo viene letto sul tuo telefono: le immagini non vengono inviate a nessuno.</p>
+    <div class="actions"><button type="button" class="btn sec" id="claudeBtn">💬 Manda link o foto a Claude</button><button type="button" class="btn sec" id="dictBtn">🎤 Detta a voce</button></div>
+    <div class="recbar" id="recBar" role="status" aria-live="polite" hidden><i class="recdot"></i><span>Sto registrando</span><span class="tm" id="recTm">0:00</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+    <p class="meta2" id="dictHint" hidden>Parla in italiano: dì il titolo, poi «Ingredienti» e un ingrediente alla volta facendo una piccola pausa tra uno e l'altro, poi «Procedimento» e un passaggio alla volta. Tocca di nuovo il pulsante per fermare.</p>
+    <p class="meta2" id="ocrMsg">Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.</p>
     <textarea id="webText" rows="5" placeholder="Oppure incolla qui il testo della ricetta…"></textarea>
     <div class="actions"><button type="button" class="btn sec" id="webGo">Compila i campi</button></div>
   </details>
@@ -517,6 +614,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 </div></dialog>
 
 <dialog id="dView"><div class="body" id="vBody"></div></dialog>
+<dialog id="dCook"><div class="ckhead"><button type="button" class="ckb" id="ckClose" aria-label="Chiudi modalità cucina">✕</button><div class="ckt" id="ckTitle"></div><button type="button" class="ckb" id="ckTm" aria-label="Imposta un timer" title="Imposta un timer">⏱</button><button type="button" class="ckb" id="ckMinus" aria-label="Testo più piccolo">A−</button><button type="button" class="ckb" id="ckPlus" aria-label="Testo più grande">A+</button></div><div class="cksun" id="ckSun"></div><div class="ckmain" id="ckMain"></div><div class="ckset" id="ckSet" hidden><svg class="ckdial" id="ckDial" viewBox="0 0 240 240" role="img" aria-label="Quadrante del timer: trascina per scegliere i minuti"></svg><input type="text" id="ckName" class="ckname" maxlength="24" placeholder="Nome del timer (facoltativo, es. pasta)" autocomplete="off"><div class="ckstep"><button type="button" data-d="-60">−1′</button><button type="button" data-d="60">+1′</button><button type="button" data-d="30">+30″</button><button type="button" data-d="3600">+1 h</button></div><div class="ckact"><button type="button" class="ckgo" id="ckGo">▶ Avvia</button><button type="button" class="ckb" id="ckSetX" aria-label="Chiudi">✕</button></div></div><div class="cktray" id="ckTray" aria-live="polite"></div></dialog>
 
 <dialog id="dPrint"><div class="body">
   <div class="xwrap"><button type="button" class="icon xbtn" id="pClose" title="Chiudi" aria-label="Chiudi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -528,9 +626,23 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
   <div class="actions"><button class="btn" id="pGo">Stampa / Salva PDF</button><button class="btn sec" id="pBack">Chiudi</button></div>
 </div></dialog>
 <div id="printArea" aria-hidden="true"></div>
+<dialog id="dTrash" aria-label="Cestino"><div class="body">
+  <div class="xwrap"><button type="button" class="icon xbtn" id="trX" title="Chiudi" aria-label="Chiudi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <h2>Cestino</h2>
+  <p class="meta2">Le ricette eliminate restano qui per 30 giorni: puoi ripristinarle o eliminarle per sempre.</p>
+  <div id="trList"></div>
+  <div class="actions"><button class="btn" id="trRestAll">Ripristina tutto</button><button class="btn del" id="trEmpty">Elimina tutto</button><button class="btn sec" id="trClose">Chiudi</button></div>
+</div></dialog>
+
+<dialog id="dAsk" aria-label="Conferma"><div class="body">
+  <p id="askMsg" style="font-weight:600;margin:6px 0 14px"></p>
+  <div class="actions"><button class="btn del" id="askOk">Elimina</button><button class="btn sec" id="askNo">Annulla</button></div>
+</div></dialog>
+
 <dialog id="dBk"><div class="body">
   <div class="xwrap"><button type="button" class="icon xbtn" id="bkX" title="Chiudi" aria-label="Chiudi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <h2>Backup</h2>
+  <p class="meta2" id="bkLast"></p>
   <p class="meta2"><b>Sincronizza tra dispositivi (senza servizi esterni):</b> premi «Salva file», invialo all'altro dispositivo (AirDrop, WhatsApp, email, cavo…) e lì premi «Carica file». Le ricette vengono <b>unite</b>: aggiunte, modifiche ed eliminazioni si propagano, e se una ricetta è cambiata in entrambi vince la versione più recente.</p>
   <div class="actions"><button class="btn" id="saveFile">Salva file</button><button class="btn sec" id="loadFile">Carica file</button></div>
   <input type="file" id="fileIn" accept=".json,application/json" hidden>
@@ -571,8 +683,15 @@ function buildCat(){
     catList.append(b);
   });
 }
-function openCat(){buildCat();catList.hidden=false;catBtn.setAttribute('aria-expanded','true');const sel=catList.querySelector('[aria-selected="true"]');sel&&sel.focus({preventScroll:true})}
-function closeCat(){catList.hidden=true;catBtn.setAttribute('aria-expanded','false')}
+function fitCat(){ // il pannello non deve uscire dallo schermo: se non ci sta, scorre al suo interno
+  catList.classList.remove('scr');catList.style.maxHeight='';
+  if(catList.hidden)return;
+  const avail=window.innerHeight-catList.getBoundingClientRect().top-12;
+  if(catList.scrollHeight>avail){catList.style.maxHeight=Math.max(120,avail)+'px';catList.classList.add('scr')}
+}
+window.addEventListener('resize',fitCat);
+function openCat(){buildCat();catList.hidden=false;document.querySelector('.bar').classList.add('up');fitCat();catBtn.setAttribute('aria-expanded','true');const sel=catList.querySelector('[aria-selected="true"]');sel&&sel.focus({preventScroll:true})}
+function closeCat(){catList.hidden=true;document.querySelector('.bar').classList.remove('up');catBtn.setAttribute('aria-expanded','false')}
 catBtn.onclick=()=>catList.hidden?openCat():closeCat();
 document.addEventListener('click',e=>{if(!$('dd').contains(e.target))closeCat()});
 document.addEventListener('keydown',e=>{
@@ -621,9 +740,95 @@ function render(){
     pic.append(hb);
     const info=el('div',{className:'info'},[el('h3',{textContent:r.title}),
       el('div',{className:'meta'},[el('span',{innerHTML:I(CLK)+(+r.min||0)+' min'}),el('span',{innerHTML:I(USR)+(+r.serv||1)+' porz.'})]),prevEl(r)]);
-    const c=el('button',{className:'card'},[pic,info]);c.onclick=()=>{selId=r.id;rememberSearch();view(r.id)};list.append(c);
+    const c=el('button',{className:'card'},[pic,info]);
+    let lt=null,sx=0,sy=0;
+    const clr=()=>{if(lt){clearTimeout(lt);lt=null}c.classList.remove('lpress')};
+    c.addEventListener('pointerdown',e=>{
+      if(e.target.closest('.heart'))return;
+      sx=e.clientX;sy=e.clientY;c.classList.add('lpress');
+      lt=setTimeout(()=>{lt=null;c.classList.remove('lpress');swallowClick=true;
+        try{if(navigator.vibrate)navigator.vibrate(30)}catch(_){}
+        askDel(r.id)},550)});
+    c.addEventListener('pointermove',e=>{if(lt&&(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10))clr()});
+    ['pointerup','pointercancel','pointerleave'].forEach(n=>c.addEventListener(n,clr));
+    c.addEventListener('contextmenu',e=>e.preventDefault());
+    c.onclick=()=>{selId=r.id;rememberSearch();view(r.id)};list.append(c);
   });
 }
+
+const TKEY='ricettario-trash',TDAYS=30,DAY=86400000;
+function loadTrash(){try{const v=JSON.parse(localStorage.getItem(TKEY)||'[]');return Array.isArray(v)?v.filter(x=>x&&x.r&&x.r.id&&x.t&&Date.now()-x.t<TDAYS*DAY):[]}catch(e){return []}}
+let trash=loadTrash();
+function saveTrash(){try{localStorage.setItem(TKEY,JSON.stringify(trash));return true}catch(e){return false}}
+function updTrashBadge(){const b=$('trBadge');b.textContent=trash.length;b.hidden=!trash.length;$('trBtn').title='Cestino'+(trash.length?' ('+trash.length+')':'')}
+function askDel(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return false;
+  if(!confirm('Eliminare «'+r.title+'»?\nPotrai recuperarla dal cestino per 30 giorni.'))return false;
+  const copy=JSON.parse(JSON.stringify(r));
+  recipes=recipes.filter(x=>x.id!==id);deleted[id]=Date.now();saveDel();
+  persist(); // libera subito spazio in memoria
+  trash=trash.filter(x=>x.r.id!==id);
+  trash.push({r:copy,t:Date.now()});
+  let ok=saveTrash();
+  if(!ok){copy.photo='';ok=saveTrash()}              // memoria piena: senza foto
+  while(!ok&&trash.length>1){trash.shift();ok=saveTrash()} // poi libero le più vecchie
+  if(!ok){trash.pop();saveTrash()}
+  render();updTrashBadge();
+  toast(ok?'"'+r.title+'" spostata nel cestino':'"'+r.title+'" eliminata (cestino pieno)',ok?id:null);
+  return true;
+}
+// dopo una pressione prolungata il rilascio del dito non deve aprire la ricetta sotto (la lista viene ridisegnata)
+let swallowClick=false;
+document.addEventListener('pointerdown',()=>{swallowClick=false},true);
+document.addEventListener('click',e=>{if(swallowClick){swallowClick=false;e.preventDefault();e.stopPropagation()}},true);
+let toastT=null;
+function toast(msg,undoId){
+  let t=$('toast');if(t)t.remove();clearTimeout(toastT);
+  t=el('div',{id:'toast',role:'status'},[el('span',{textContent:msg})]);
+  if(undoId){const u=el('button',{type:'button',textContent:'Annulla'});u.onclick=()=>{restoreTrash(undoId);t.remove()};t.append(u)}
+  document.body.append(t);toastT=setTimeout(()=>t.remove(),6000);
+}
+function ask(msg,label){
+  return new Promise(res=>{
+    const d=$('dAsk');$('askMsg').textContent=msg;$('askOk').textContent=label||'Elimina';
+    let v=false;
+    $('askOk').onclick=()=>{v=true;d.close()};$('askNo').onclick=()=>d.close();
+    d.addEventListener('close',()=>res(v),{once:true});
+    d.showModal();
+  });
+}
+function restoreTrash(id){
+  const i=trash.findIndex(x=>x.r.id===id);if(i<0)return;
+  const r=trash[i].r;r.u=Date.now();
+  if(!recipes.some(x=>x.id===id))recipes.push(r);
+  delete deleted[id];saveDel();trash.splice(i,1);saveTrash();
+  if(persist()){render();updTrashBadge();renderTrash()}
+}
+function renderTrash(){
+  const box=$('trList');box.textContent='';
+  const items=[...trash].sort((a,b)=>b.t-a.t);
+  $('trEmpty').hidden=$('trRestAll').hidden=!items.length;
+  if(!items.length){box.append(el('div',{className:'tempty',textContent:'Il cestino è vuoto.'}));return}
+  items.forEach(x=>{
+    const left=Math.max(1,Math.ceil((x.t+TDAYS*DAY-Date.now())/DAY));
+    const rs=el('button',{type:'button',className:'btn',textContent:'Ripristina'});
+    rs.onclick=()=>restoreTrash(x.r.id);
+    const dl=el('button',{type:'button',className:'btn del',textContent:'Elimina'});
+    dl.onclick=async()=>{if(await ask('Eliminare per sempre "'+x.r.title+'"? Non si potrà recuperare.','Elimina per sempre')){trash=trash.filter(y=>y!==x);saveTrash();updTrashBadge();renderTrash()}};
+    box.append(el('div',{className:'trow'},[
+      el('div',{className:'tt'},[el('b',{textContent:x.r.title}),el('small',{textContent:(x.r.cat||'')+' · ancora '+left+(left===1?' giorno':' giorni')})]),rs,dl]));
+  });
+}
+$('trBtn').onclick=()=>{renderTrash();$('dTrash').showModal();$('dTrash').querySelector('.body').scrollTop=0};
+$('trX').onclick=$('trClose').onclick=()=>$('dTrash').close();
+$('trRestAll').onclick=()=>{
+  if(!trash.length)return;
+  const now=Date.now();
+  trash.forEach(x=>{const r=x.r;r.u=now;if(!recipes.some(y=>y.id===r.id))recipes.push(r);delete deleted[r.id]});
+  saveDel();trash=[];saveTrash();
+  if(persist()){render();updTrashBadge();renderTrash()}
+};
+$('trEmpty').onclick=async()=>{if(trash.length&&await ask('Eliminare per sempre '+(trash.length===1?'la ricetta nel cestino':'tutte le '+trash.length+' ricette nel cestino')+'? Non si potrà recuperarle.','Elimina tutto')){trash=[];saveTrash();updTrashBadge();renderTrash()}};
 
 function view(id){
   const r=recipes.find(x=>x.id===id);if(!r)return;
@@ -632,7 +837,9 @@ function view(id){
   xb.setAttribute('aria-label','Chiudi');xb.onclick=()=>$('dView').close();
   const pb=el('button',{type:'button',className:'icon xbtn pbtn',title:'Per il ricettario cartaceo',innerHTML:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>'});
   pb.setAttribute('aria-label','Per il ricettario cartaceo');pb.onclick=()=>openPrint(r);
-  b.append(el('div',{className:'xwrap'},[xb,pb]));
+  const cb=el('button',{type:'button',className:'icon xbtn ckbtn',title:'Modalità cucina',innerHTML:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 13.5A3.5 3.5 0 0 1 7.3 6.6a4 4 0 0 1 7.4-1.2 3.8 3.8 0 0 1 2.3 8.1V19H7zM7 16.5h10"/></svg>'});
+  cb.setAttribute('aria-label','Modalità cucina');cb.onclick=()=>openCook(id);
+  b.append(el('div',{className:'xwrap'},[cb,xb,pb]));
   if(r.photo)b.append(el('img',{className:'hero',src:r.photo,alt:''}));
   else b.append(el('div',{className:'heroph tile',innerHTML:badgeSvg()}));
   const ul=el('ul',{className:'ing'},lines(r.ingr).map(t=>el('li',{textContent:t})));
@@ -647,7 +854,7 @@ function view(id){
   fav.onclick=()=>{r.fav=!r.fav;r.u=Date.now();persist();$('dView').close();render()};
   const ed=el('button',{className:'btn sec',textContent:'Modifica'});ed.onclick=()=>{$('dView').close();openForm(id)};
   const del=el('button',{className:'btn del',textContent:'Elimina'});
-  del.onclick=()=>{if(confirm('Eliminare "'+r.title+'"?')){recipes=recipes.filter(x=>x.id!==id);deleted[id]=Date.now();saveDel();persist();$('dView').close();render()}};
+  del.onclick=()=>{if(askDel(id))$('dView').close()};
   const acts=[fav,ed,del];
   if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'+ Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=()=>{$('dView').close();openForm(id);$('photo').click()};acts.splice(1,0,ph)}
   b.append(el('div',{className:'actions vact'},acts));
@@ -751,44 +958,59 @@ const runWeb=fromOcr=>{
   alert(r.ok?'Campi compilati: controlla e correggi se serve, poi premi Salva.':'Non ho trovato le sezioni «Ingredienti» e «Procedimento»: ho messo il testo nel procedimento, sposta a mano gli ingredienti.');
 };
 $('webGo').onclick=()=>runWeb(false);
-let ocrLib=null;
-function loadOcr(){
-  if(window.Tesseract)return Promise.resolve();
-  if(ocrLib)return ocrLib;
-  ocrLib=new Promise((ok,ko)=>{
-    const sc=document.createElement('script');
-    sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-    sc.onload=ok;sc.onerror=()=>{ocrLib=null;ko(new Error('lib'))};
-    document.head.append(sc);
-  });
-  return ocrLib;
-}
-$('ocrBtn').onclick=()=>$('ocrIn').click();
-const ocrChange=async e=>{
-  const files=[...e.target.files];e.target.value='';if(!files.length)return;
-  const msg=$('ocrMsg'),btn=$('ocrBtn');btn.disabled=true;
-  try{
-    msg.textContent='Preparo il lettore di testo (la prima volta serve internet e può richiedere un po\')…';
-    await loadOcr();
-    let all=[];
-    for(let i=0;i<files.length;i++){
-      const r=await Tesseract.recognize(files[i],'ita',{logger:m=>{
-        if(m.status==='recognizing text')msg.textContent='Leggo l\'immagine '+(i+1)+' di '+files.length+'… '+Math.round(m.progress*100)+'%';
-        else if(m.status&&m.status.includes('loading'))msg.textContent='Scarico i dati della lingua italiana (solo la prima volta)…';
-      }});
-      all.push((r.data.text||'').trim());
-    }
-    const txt=all.filter(Boolean).join('\n');
-    if(txt.length<20){msg.textContent='Non sono riuscito a leggere testo: prova con una foto più nitida e ben illuminata.';return}
-    $('webText').value=($('webText').value.trim()?$('webText').value.trim()+'\n':'')+txt;
-    msg.textContent='Fatto! Ho compilato i campi: controlla il testo letto e i campi qui sotto.';
-    runWeb(true);
-  }catch(err){
-    msg.textContent='Lettura non riuscita (serve internet la prima volta). Puoi incollare il testo a mano.';
-  }finally{btn.disabled=false}
+/* dettatura a voce: ogni frase (pausa) diventa una riga; «Ingredienti»/«Procedimento» all'inizio di una frase diventano titoli di sezione */
+let rec=null,recT=null;
+const recShow=on=>{
+  const bar=$('recBar'),tm=$('recTm');
+  clearInterval(recT);recT=null;bar.hidden=!on;
+  if(on){const t0=Date.now();tm.textContent='0:00';recT=setInterval(()=>{const n=Math.floor((Date.now()-t0)/1000);tm.textContent=Math.floor(n/60)+':'+String(n%60).padStart(2,'0')},500)}
 };
-$('ocrIn').onchange=ocrChange;$('ocrCam').onchange=ocrChange;
-$('ocrCamBtn').onclick=()=>$('ocrCam').click();
+$('dictBtn').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$('ocrMsg'),t=$('webText'),b=$('dictBtn'),h=$('dictHint');
+  if(rec){rec.stop();return}
+  const fallback=()=>{h.hidden=false;t.focus();m.textContent='La dettatura dentro l\'app non è disponibile qui: tocca il microfono sulla tastiera del telefono e detta nella casella sotto.'};
+  if(!SR){fallback();return}
+  const add=tx=>{
+    tx=tx.replace(/\s*\ba capo\b\s*/gi,'\n').trim();if(!tx)return;
+    const k=/^(ingredienti|procedimento|preparazione)\b[\s:,.]*([\s\S]*)$/i.exec(tx);
+    if(k)tx=k[1][0].toUpperCase()+k[1].slice(1).toLowerCase()+(k[2]?'\n'+k[2]:'');
+    tx=tx.charAt(0).toUpperCase()+tx.slice(1);
+    t.value=(t.value.trim()?t.value.replace(/\s+$/,'')+'\n':'')+tx;
+  };
+  try{
+    rec=new SR();rec.lang='it-IT';rec.continuous=true;rec.interimResults=true;
+    rec.onstart=()=>{b.textContent='⏹ Fine dettatura';b.classList.add('rec');recShow(true);h.hidden=false;m.textContent='Ti ascolto… parla ora.'};
+    rec.onresult=ev=>{
+      let interim='';
+      for(let i=ev.resultIndex;i<ev.results.length;i++){
+        const r=ev.results[i],tx=r[0].transcript;
+        if(r.isFinal)add(tx);else interim+=tx+' ';
+      }
+      m.textContent=interim?'Sto sentendo: '+interim.trim():'Ti ascolto…';
+    };
+    rec.onerror=ev=>{
+      recShow(false);
+      if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){m.textContent='Il microfono non è permesso: abilitalo nelle impostazioni del browser, oppure usa il microfono della tastiera.';h.hidden=false}
+      else if(ev.error!=='no-speech'&&ev.error!=='aborted')m.textContent='Dettatura interrotta ('+ev.error+'). Puoi riprovare o usare il microfono della tastiera.';
+    };
+    rec.onend=()=>{rec=null;recShow(false);b.textContent='🎤 Detta a voce';b.classList.remove('rec');if(t.value.trim().length>=20&&/Dettatura|Ti ascolto|Sto sentendo/.test(m.textContent))m.textContent='Dettatura finita. Controlla il testo e tocca «Compila i campi».'};
+    rec.start();
+  }catch(e){rec=null;recShow(false);fallback()}
+};
+
+/* manda link o foto della ricetta a Claude: apre una chat con il messaggio già pronto */
+$('claudeBtn').onclick=()=>{
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const msg="Ti mando una ricetta (link o foto) da aggiungere al mio ricettario. Allego/incollo qui sotto la fonte.\n\n"+
+  "Leggila e restituiscimi un file .json scaricabile (non solo testo nella chat) con questa struttura, adatta alla funzione \"Carica file\" del mio ricettario:\n"+
+  '{"v":2,"recipes":[{"id":"'+id+'","fav":false,"title":"Titolo","cat":"Primi","min":30,"serv":4,"ingr":"ingrediente 1\\ningrediente 2","steps":"passo 1\\npasso 2","photo":null,"src":"https://link-della-fonte-oppure-vuoto","u":'+Date.now()+'}],"deleted":{}}\n\n'+
+  "Regole: cat deve essere una tra "+CATS.join(', ')+"; min è in minuti e serv è il numero di porzioni (numeri interi); ingr e steps hanno una riga per voce, senza numeri o elenchi puntati; scrivi in italiano e non inventare nulla che non sia nella fonte, segnalami cosa è illeggibile o mancante.\n\n"+
+  "Ricetta:\n";
+  const m=$('ocrMsg');
+  try{navigator.clipboard&&navigator.clipboard.writeText(msg)}catch(e){}
+  const w=window.open('https://claude.ai/new?q='+encodeURIComponent(msg),'_blank');
+  m.textContent=w?'Ho aperto Claude con il messaggio pronto: aggiungi il link o allega la foto e invia. Se la chat è vuota, incolla il messaggio (l\'ho copiato). Poi scarica il file che ti dà e caricalo da Backup → «Carica file».':'Il browser ha bloccato l\'apertura. Ho copiato il messaggio: aprilo in Claude, incollalo e aggiungi link o foto.';
+};
 const STOP=new Set('del dei dal dai per con alla allo dalla della dello delle degli nella nelle sulla una uno gli che piu circa grammi grammo gram etti etto litro litri cucchiaio cucchiai cucchiaino cucchiaini tazza tazze bicchiere bicchieri spicchio spicchi pizzico fetta fette bustina bustine mazzetto mazzo foglia foglie rametto rametti noce fresco fresca freschi fresche tritato tritata tritati grattugiato grattugiata quanto basta all dal nel sul'.split(' '));
 const STAPLE=new Set(['sal','pep','acqu','oli']);
 function stemsOf(t){return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>=3&&!STOP.has(w)).map(w=>w.length>3&&/[aeiou]$/.test(w)?w.slice(0,-1):w)}
@@ -856,10 +1078,8 @@ function propTab(t){
   ['P','E','C'].forEach(k=>{$('pn'+k).hidden=k!==t});
   document.querySelectorAll('.ptabs button').forEach(b=>{const on=b.dataset.t===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
 }
-function propFocus(){
-  const t=document.querySelector('.ptabs button.on').dataset.t;
-  const id=t==='P'?(PR.find(i=>!$(i).value.trim())||PR[0]):t==='E'?'eV':null;
-  if(id)$(id).focus({preventScroll:true});else if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+function propFocus(){ // niente focus automatico sui campi numerici: la tastiera si apre solo quando tocchi un campo
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
 }
 document.querySelectorAll('.ptabs button').forEach(b=>b.onclick=()=>{propTab(b.dataset.t);propFocus()});
 
@@ -963,7 +1183,7 @@ function openForm(id){
   $('title').value=r?r.title:'';$('cat').value=r?r.cat:CATS[0];
   $('min').value=r?r.min:30;$('serv').value=r?r.serv:4;
   $('ingr').value=r?r.ingr:'';$('steps').value=r?r.steps:'';
-  $('src').value=r&&r.src||'';$('webText').value='';$('webBox').open=false;$('ocrMsg').textContent='Scegli uno o più screenshot (in ordine, dall\'alto in basso). Il testo viene letto sul tuo telefono: le immagini non vengono inviate a nessuno.';
+  $('src').value=r&&r.src||'';$('webText').value='';$('webBox').open=false;$('ocrMsg').textContent='Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.';
   photoData=r?r.photo||null:null;$('photo').value='';
   syncPhoto();
   if(!r){const d=loadDraft();if(d){
@@ -1031,18 +1251,9 @@ $('q').addEventListener('change',rememberSearch);
 $('q').addEventListener('keydown',e=>{if(e.key==='Enter'){rememberSearch();$('hist').hidden=true;$('q').blur()}else if(e.key==='Escape')$('hist').hidden=true});
 document.addEventListener('click',e=>{if(e.target!==$('q')&&!$('hist').contains(e.target))$('hist').hidden=true});
 
-$('bkBtn').onclick=()=>{$('bkText').value=JSON.stringify(recipes);$('dBk').showModal()};
+$('bkBtn').onclick=()=>{$('bkText').value=JSON.stringify(recipes);updBk();$('dBk').showModal()};
 $('bkClose').onclick=()=>$('dBk').close();
 $('bkX').onclick=()=>$('dBk').close();
-$('saveFile').onclick=async()=>{
-  const name='ricettario-'+new Date().toISOString().slice(0,10)+'.json';
-  const file=new File([JSON.stringify({v:2,recipes,deleted})],name,{type:'application/json'});
-  try{
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'il Ricettario per GIOIRE'});return}
-  }catch(e){if(e&&e.name==='AbortError')return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;
-  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-};
 $('loadFile').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
@@ -1066,10 +1277,11 @@ $('fileIn').onchange=async e=>{
       if(t&&(n.u||0)<=t)return; // eliminata dopo l'ultima modifica
       if(t){delete deleted[n.id]} // modificata dopo l'eliminazione: torna valida
       const i=recipes.findIndex(x=>x.id===n.id);
+      trash=trash.filter(x=>x.r.id!==n.id);
       if(i<0){recipes.push(n);add++}
       else if((n.u||0)>(recipes[i].u||0)){recipes[i]=n;upd++}
     });
-    saveDel();
+    saveDel();saveTrash();updTrashBadge();
     if(persist()){render();alert('Fatto: '+add+' aggiunte, '+upd+' aggiornate, '+rem+' eliminate.')}
   }catch(err){alert('File non valido.')}
 };
@@ -1081,16 +1293,244 @@ $('imp').onclick=()=>{
   catch(e){alert('Testo di backup non valido.')}
 };
 
+/* ---------- promemoria backup ---------- */
+const BKEY='ricettario-lastbackup',BSNZ='ricettario-bk-snooze',BDAYS=14;
+function lastBk(){try{return +localStorage.getItem(BKEY)||0}catch(e){return 0}}
+function markBk(){try{localStorage.setItem(BKEY,String(Date.now()));localStorage.removeItem(BSNZ)}catch(e){}bkHide();updBk()}
+function lastMod(){let m=0;recipes.forEach(r=>{m=Math.max(m,+r.u||0)});Object.keys(deleted).forEach(k=>{m=Math.max(m,+deleted[k]||0)});return m}
+function bkDue(){
+  if(!recipes.length)return false;
+  const last=lastBk();
+  if(!last)return true;
+  if(lastMod()<=last)return false;            // nulla di nuovo dall'ultimo backup
+  return Date.now()-last>BDAYS*DAY;
+}
+function bkAgo(t){const n=Math.floor((Date.now()-t)/DAY);return n<=0?'oggi':n===1?'ieri':n+' giorni fa'}
+function updBk(){
+  const ban=$('bkBan');if(!ban)return;
+  const due=bkDue(),last=lastBk();
+  $('bkBtn').classList.toggle('due',due);
+  const L=$('bkLast');if(L)L.textContent=last?'Ultimo backup: '+bkAgo(last)+'.':'Non hai ancora salvato nessun backup.';
+}
+/* la barra compare una sola volta all'apertura dell'app, poi si nasconde da sola */
+let bkTimer=null;
+function bkHide(){clearTimeout(bkTimer);bkTimer=null;const b=$('bkBan');if(b)b.hidden=true}
+function bkIntro(){
+  if(!bkDue())return;
+  const last=lastBk();
+  $('bkTxt').textContent=last?'Ultimo backup '+bkAgo(last)+', e da allora hai ricette nuove o modificate.':'Le tue ricette sono salvate solo su questo telefono: fai un backup per non perderle.';
+  $('bkBan').hidden=false;
+  clearTimeout(bkTimer);bkTimer=setTimeout(bkHide,9000);
+}
+async function saveBackup(){
+  const name='ricettario-'+new Date().toISOString().slice(0,10)+'.json';
+  const file=new File([JSON.stringify({v:2,recipes,deleted})],name,{type:'application/json'});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'il Ricettario per GIOIRE'});markBk();toast('Backup salvato ✓');return true}
+  }catch(e){if(e&&e.name==='AbortError')return false}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  markBk();toast('Backup salvato ✓');return true;
+}
+$('saveFile').onclick=saveBackup;
+$('bkNow').onclick=saveBackup;
+$('bkLater').onclick=bkHide;
+try{localStorage.removeItem(BSNZ)}catch(e){}
+{const _r=render;render=function(){_r.apply(this,arguments);updBk()}}
+
+/* ---------- modalità cucina ---------- */
+const ck={timers:[],n:0,tick:null,wl:null,ac:null,al:null,fs:+(()=>{try{return localStorage.getItem('ricettario-ckfs')}catch(e){return 2}})()||2};
+const CKFS=[1.1,1.25,1.4,1.6,1.8,2.05];
+function ckRoman(n){const m=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let o='';m.forEach(([v,l])=>{while(n>=v){o+=l;n-=v}});return o}
+/* trova i tempi nel testo: «10 minuti», «1 ora e 30 minuti», «mezz'ora», «1/2 ora», «10-12 min» */
+function parseTimes(t){
+  const RX=/(mezz['’]ora)|(un['’]ora)|\b([134]\/[24])\s*(?:ora|ore)\b|(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|—|o)\s*(\d+(?:[.,]\d+)?))?\s*(ore|ora|h|minuti|minuto|min|secondi|secondo|sec)\b/gi;
+  const out=[];let m;
+  while((m=RX.exec(t))){
+    let s,hrs=false;
+    if(m[1]){s=1800;hrs=true}
+    else if(m[2]){s=3600;hrs=true}
+    else if(m[3]){s={'1/2':1800,'1/4':900,'3/4':2700}[m[3]]||0;hrs=true}
+    else{
+      const n=parseFloat(m[4].replace(',','.')),u=m[6].toLowerCase();
+      if(/^(ore|ora|h)$/.test(u)){s=n*3600;hrs=true}else if(/^min/.test(u))s=n*60;else s=n;
+    }
+    s=Math.round(s);if(!s)continue;
+    const cur={s,label:m[0].trim(),hrs,start:m.index,end:m.index+m[0].length,min:!hrs&&m[6]&&/^min/i.test(m[6])};
+    const prev=out[out.length-1];
+    if(prev&&prev.hrs&&cur.min&&/^\s*(e|,)?\s*$/i.test(t.slice(prev.end,cur.start))){prev.s+=cur.s;prev.label=t.slice(prev.start,cur.end).trim();prev.hrs=false;prev.end=cur.end;continue}
+    out.push(cur);
+  }
+  return out.map(o=>({s:o.s,label:o.label}));
+}
+function ckFmt(ms){const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'):m+':'+String(x).padStart(2,'0')}
+function ckAudio(){try{ck.ac=ck.ac||new (window.AudioContext||window.webkitAudioContext)();if(ck.ac.state==='suspended')ck.ac.resume()}catch(e){}}
+function ckBeep(){
+  try{ckAudio();const a=ck.ac;if(!a)return;
+    [0,.35,.7].forEach(d=>{const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+d;
+      o.type='sine';o.frequency.value=880;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4,t+.02);g.gain.linearRampToValueAtTime(0,t+.25);
+      o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.3)});
+  }catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}catch(e){}
+}
+function ckAlarm(){if(ck.al)return;ckBeep();ck.al=setInterval(()=>{if(ck.timers.some(t=>t.ring))ckBeep();else ckAlarmStop()},2200)}
+function ckAlarmStop(){if(ck.al){clearInterval(ck.al);ck.al=null}}
+function ckTray(){
+  const tr=$('ckTray');tr.textContent='';
+  ck.timers.forEach(t=>{
+    const tt=el('span',{className:'t',textContent:t.ring?'0:00':ckFmt(t.end-Date.now())});t.ref=tt;
+    const row=el('div',{className:'cktm'+(t.ring?' ring':'')},[tt,el('span',{className:'l',textContent:(t.ring?'Tempo scaduto! ':'')+t.label})]);
+    if(t.ring){const b=el('button',{type:'button',textContent:'Ferma'});b.onclick=()=>ckDrop(t.id);row.append(b)}
+    else{
+      const p=el('button',{type:'button',textContent:'+1′',title:'Aggiungi un minuto'});p.onclick=()=>{t.end+=60000;ckTick()};
+      const x=el('button',{type:'button',textContent:'🗑 Elimina',title:'Elimina il timer'});x.setAttribute('aria-label','Elimina il timer');x.onclick=()=>ckDrop(t.id);
+      row.append(p,x);
+    }
+    tr.append(row);
+  });
+  document.querySelectorAll('#ckMain .ckchip').forEach(c=>c.classList.toggle('on',ck.timers.some(t=>t.label===c.dataset.k)));
+}
+function ckTick(){
+  const now=Date.now();let ch=false;
+  ck.timers.forEach(t=>{if(!t.ring&&now>=t.end){t.ring=true;ch=true}});
+  if(ch){ckTray();ckAlarm()}
+  else ck.timers.forEach(t=>{if(t.ref&&!t.ring)t.ref.textContent=ckFmt(t.end-now)});
+  if(!ck.timers.length&&ck.tick){clearInterval(ck.tick);ck.tick=null}
+}
+function ckDrop(id){ck.timers=ck.timers.filter(t=>t.id!==id);ckTray();if(!ck.timers.some(t=>t.ring))ckAlarmStop();if(!ck.timers.length&&ck.tick){clearInterval(ck.tick);ck.tick=null}}
+function ckStart(lbl,secs,uniq){
+  ckAudio();
+  if(!uniq)ck.timers=ck.timers.filter(x=>x.label!==lbl);
+  ck.timers.push({id:++ck.n,label:lbl,secs,end:Date.now()+secs*1000,ring:false});
+  ckTray();if(!ck.tick)ck.tick=setInterval(ckTick,500);
+}
+function ckSun(){$('ckSun').textContent=ck.wl?'☀ Lo schermo resta acceso mentre cucini':'☾ Il telefono potrebbe spegnere lo schermo: tocca ogni tanto'}
+async function ckLock(){
+  try{
+    if('wakeLock' in navigator){
+      ck.wl=await navigator.wakeLock.request('screen');
+      ck.wl.addEventListener('release',()=>{ck.wl=null;if($('dCook').open)ckSun()});
+    }
+  }catch(e){ck.wl=null}
+  ckSun();
+}
+function ckFont(d){
+  ck.fs=Math.max(0,Math.min(CKFS.length-1,ck.fs+d));
+  $('ckMain').style.fontSize=CKFS[ck.fs]+'rem';
+  try{localStorage.setItem('ricettario-ckfs',String(ck.fs))}catch(e){}
+}
+function ckCur(){
+  const L=[...$('ckMain').querySelectorAll('.ckst li')];
+  L.forEach(x=>x.classList.remove('cur'));
+  const c=L.find(x=>!x.classList.contains('done'));if(c)c.classList.add('cur');
+  return c;
+}
+function openCook(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return;
+  ckEnd();ckTray();$('ckSet').hidden=true;
+  $('ckTitle').textContent=r.title;
+  const m=$('ckMain');m.textContent='';
+  m.style.fontSize=CKFS[ck.fs]+'rem';
+  const ing=el('ul',{className:'cking'},lines(r.ingr).map(t=>{const li=el('li',{textContent:t});li.onclick=()=>li.classList.toggle('done');return li}));
+  const st=el('ol',{className:'ckst'},lines(r.steps).map((t0,i)=>{
+    const t=t0.replace(/^\d+[.)]\s*/,'');
+    const li=el('li',{},[el('span',{className:'sx',textContent:t})]);
+    const times=parseTimes(t);
+    if(times.length){
+      const box=el('div',{className:'ckchips'});
+      times.forEach(x=>{const key='Passo '+ckRoman(i+1)+' · '+x.label;const b=el('button',{type:'button',className:'ckchip',textContent:'⏱ '+x.label});b.dataset.k=key;b.setAttribute('aria-label','Avvia il timer di '+x.label);b.onclick=e=>{e.stopPropagation();ckStart(key,x.s)};box.append(b)});
+      li.append(box);
+    }
+    li.onclick=()=>{li.classList.toggle('done');const c=ckCur();if(c&&li.classList.contains('done'))c.scrollIntoView({block:'center',behavior:'smooth'})};
+    return li;
+  }));
+  m.append(el('h3',{textContent:'Ingredienti'}),ing,el('h3',{textContent:'Procedimento'}),st);
+  ckCur();
+  $('ckSun').textContent='';
+  $('dCook').showModal();m.scrollTop=0;
+  ckLock();
+}
+function ckEnd(){ck.timers=[];if(ck.tick){clearInterval(ck.tick);ck.tick=null}ckAlarmStop();try{ck.wl&&ck.wl.release()}catch(e){}ck.wl=null}
+/* timer impostato a mano: quadrante da orologio */
+const CKD={t:600,drag:false,first:false};
+function ckPt(r,a){const q=a*Math.PI/180;return[120+r*Math.sin(q),120-r*Math.cos(q)]}
+(function(){
+  let h='<circle class="face" cx="120" cy="120" r="108"/>';
+  for(let m=0;m<60;m++){
+    const big=m%5===0,[x1,y1]=ckPt(100,m*6),[x2,y2]=ckPt(big?90:95,m*6);
+    h+='<line class="tk" x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke-width="'+(big?2.4:1)+'"/>';
+    if(big){const[lx,ly]=ckPt(78,m*6);h+='<text class="lb" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'">'+m+'</text>'}
+  }
+  h+='<path class="wg" id="ckWg" d=""/><circle class="kn" id="ckKn" r="9" cx="120" cy="54"/><circle class="hub" cx="120" cy="120" r="35"/><text class="tx" id="ckTx" x="120" y="120">10:00</text>';
+  $('ckDial').innerHTML=h;
+})();
+function ckDraw(){
+  const t=CKD.t,sec=t%3600,frac=t>0&&sec===0?1:sec/3600,ang=frac*360,R=66;
+  let d='';
+  if(t>0){
+    if(frac>=1)d='M120 '+(120-R)+' A'+R+' '+R+' 0 1 1 119.99 '+(120-R)+' Z';
+    else{const[x,y]=ckPt(R,ang);d='M120 120 L120 '+(120-R)+' A'+R+' '+R+' 0 '+(ang>180?1:0)+' 1 '+x.toFixed(2)+' '+y.toFixed(2)+' Z'}
+  }
+  $('ckWg').setAttribute('d',d);
+  const[kx,ky]=ckPt(R,ang);$('ckKn').setAttribute('cx',kx.toFixed(2));$('ckKn').setAttribute('cy',ky.toFixed(2));
+  const tx=ckFmt(t*1000);$('ckTx').textContent=tx;$('ckTx').setAttribute('font-size',tx.length>5?15:21);
+}
+function ckDialAt(e){
+  const svg=$('ckDial'),r=svg.getBoundingClientRect();
+  const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+  if(Math.hypot(dx,dy)<r.width*.15)return;
+  const ang=(Math.atan2(dx,-dy)*180/Math.PI+360)%360;
+  let m=Math.round(ang/6)%60,hh=Math.floor(CKD.t/3600);
+  if(!CKD.first){
+    const dm=m-Math.floor(CKD.t/60)%60;
+    if(dm<-30)hh=Math.min(98,hh+1);
+    else if(dm>30){if(hh>0)hh--;else m=0}
+  }
+  CKD.first=false;
+  CKD.t=Math.min(99*3600,hh*3600+m*60+CKD.t%60);
+  ckDraw();
+}
+$('ckDial').addEventListener('pointerdown',e=>{CKD.drag=true;CKD.first=true;try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}ckDialAt(e);e.preventDefault()});
+$('ckDial').addEventListener('pointermove',e=>{if(CKD.drag)ckDialAt(e)});
+['pointerup','pointercancel'].forEach(n=>$('ckDial').addEventListener(n,()=>{CKD.drag=false}));
+$('ckSet').querySelectorAll('.ckstep button').forEach(b=>b.onclick=()=>{CKD.t=Math.max(0,Math.min(99*3600,CKD.t+(+b.dataset.d)));ckDraw()});
+$('ckTm').onclick=()=>{const p=$('ckSet');p.hidden=!p.hidden;if(!p.hidden)ckDraw()};
+$('ckSetX').onclick=()=>{$('ckSet').hidden=true};
+$('ckGo').onclick=()=>{
+  if(CKD.t<=0){CKD.t=60;ckDraw();return}
+  ck.mn=(ck.mn||0)+1;
+  const nm=$('ckName').value.trim();
+  ckStart((nm||'Timer '+ck.mn)+' · '+ckFmt(CKD.t*1000),CKD.t,true);
+  $('ckName').value='';$('ckSet').hidden=true;
+};
+function ckQuit(){
+  if(ck.timers.length&&!confirm('Ci sono timer attivi: se chiudi verranno annullati. Chiudere?'))return;
+  ckEnd();$('dCook').close();
+}
+$('ckClose').onclick=ckQuit;
+$('ckMinus').onclick=()=>ckFont(-1);
+$('ckPlus').onclick=()=>ckFont(1);
+$('dCook').addEventListener('cancel',e=>{e.preventDefault();ckQuit()});
+$('dCook').addEventListener('pointerdown',ckAudio);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&$('dCook').open){if(!ck.wl)ckLock();ckTick()}});
+let bkAway=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){bkAway=Date.now();return}
+  if(bkAway&&Date.now()-bkAway>5*60000&&!document.querySelector('dialog[open]')&&!$('splash'))bkIntro();
+  bkAway=0;
+});
+
+
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
-recipes=load();render();
+recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
 const sp=$('splash');let seen=false;
 try{seen=sessionStorage.getItem('splash-seen')==='1'}catch(e){}
-if(seen)sp.remove();
+if(seen){sp.remove();bkIntro()}
 else{
   $('spCount').textContent=recipes.length?(recipes.length===1?'1 ricetta ti aspetta':recipes.length+' ricette ti aspettano'):'Aggiungi la tua prima ricetta';
-  $('spGo').onclick=()=>{try{sessionStorage.setItem('splash-seen','1')}catch(e){}sp.classList.add('out');setTimeout(()=>sp.remove(),750)};
+  $('spGo').onclick=()=>{try{sessionStorage.setItem('splash-seen','1')}catch(e){}sp.classList.add('out');setTimeout(()=>sp.remove(),750);setTimeout(bkIntro,500)};
   $('spGo').focus();
 }
 document.querySelectorAll('img.appico').forEach(i=>{const l=document.querySelector('link[rel="icon"]');if(l)i.src=l.href});
