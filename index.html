@@ -223,7 +223,7 @@ header{flex:none}
 .box::after{bottom:6px;height:30px;background:linear-gradient(transparent,var(--bg))}
 @media (max-width:600px){
 .boxwrap{padding:8px 8px 10px}.box{border-radius:16px}
-.hat{position:absolute;left:14px;top:12px;width:46px}.div{display:none}.mast{padding-top:34px}
+.hat{display:block;margin:0 auto;width:52px}.div{display:none}.mast{padding-top:14px}
 main{padding:16px 10px 96px}
 }
 .pw{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
@@ -238,6 +238,30 @@ main{padding:16px 10px 96px}
 .box::before,.box::after{left:0;right:0}
 .box::before{top:0}.box::after{bottom:0}
 body{-webkit-font-smoothing:antialiased}
+/* le card non si schiacciano: la lista sporge e scorre col dito */
+main{grid-auto-rows:max-content;touch-action:pan-y;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.card{touch-action:pan-y;min-height:max-content}
+/* scrollbar nascosta (lo scroll col dito funziona uguale) */
+main{scrollbar-width:none;-ms-overflow-style:none}
+main::-webkit-scrollbar{display:none;width:0;height:0}
+/* card ricetta compatte e senza foto (tutte le larghezze) */
+.card{padding:5px}
+.card .pic{aspect-ratio:16/10}
+.card .tag{font-size:.56rem;padding:1px 7px;left:6px;top:6px}
+.card .heart{width:22px;height:22px;flex:none;font-size:.75rem}
+.card .info{padding:6px 3px 2px}
+.card .info h3{font-size:1rem;line-height:1.15;padding-bottom:3px;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .meta{flex-direction:row;gap:10px;font-size:.76rem}
+.card .prev{display:none}
+.card .pw{margin-top:4px;padding-top:4px}
+/* niente foto nell'anteprima: restano solo categoria e cuore su una riga */
+.card .pic,.card .pic.tile{aspect-ratio:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;background:none!important;box-shadow:none;overflow:visible;border-radius:0;padding:2px 2px 4px;min-height:28px}
+.card .pic img,.card .pic .ph{display:none}
+.card .pic::after{display:none}
+.card .tag{position:static}
+.card .pic .heart,.card .pic .heart.off,.card .pic .heart:not(.off){position:static;width:24px;height:24px;flex:none}
+.card .pic .heart .ico{width:13px;height:13px}
+.card .info{padding-top:2px}
 .ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .icon .ico{width:20px;height:20px}
 .meta span,.stats span{display:inline-flex;align-items:center;gap:5px}
