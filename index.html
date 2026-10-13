@@ -435,7 +435,7 @@ body>#printArea{display:block!important}
 .trow .btn{flex:none;min-height:38px;padding:6px 12px;font-size:.82rem}
 .tempty{text-align:center;color:var(--muted);padding:22px 0}
 #dTrash .actions #trClose{flex:0 0 auto}
-#dTrash .actions #trRestAll,#dTrash .actions #trEmpty{white-space:nowrap;font-size:.9rem;padding-left:10px;padding-right:10px}
+#dTrash .actions #trRestAll,#dTrash .actions #trEmpty{white-space:nowrap}
 
 /* chiudi e stampa: più staccati dallo sfondo */
 .xbtn{background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--accent);color:var(--accent);box-shadow:0 1px 4px rgba(40,25,10,.22)}
@@ -511,9 +511,9 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 .cktm.ring{background:#b3261e;color:#fff;animation:ckring .6s ease-in-out infinite alternate}
 @keyframes ckring{to{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.cktm.ring{animation:none}}
-#dCook .ckset{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 12px;border-top:1px double var(--border);max-height:62dvh;overflow-y:auto}
+#dCook .ckset{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 12px;border-top:1px double var(--border);max-height:62dvh;overflow-y:auto}
 #dCook .ckset[hidden]{display:none}
-.ckdial{width:min(60vw,236px);height:auto;flex:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.ckdial{width:min(60vw,236px,30dvh);height:auto;flex:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .ckdial .face{fill:var(--card);stroke:var(--accent);stroke-width:3}
 .ckdial .tk{stroke:var(--accent);stroke-linecap:round}
 .ckdial .lb{fill:var(--text);font:600 12px var(--sans);text-anchor:middle;dominant-baseline:central}
@@ -523,11 +523,62 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 .ckdial .tx{fill:var(--text);font-weight:700;font-family:var(--sans);text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
 .ckstep{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .ckstep button{min-height:48px;min-width:60px;padding:0 12px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:700 .9rem var(--sans)}
-.ckact{display:flex;align-items:center;gap:8px}
+.ckact{display:flex;align-items:center;gap:8px;position:sticky;bottom:0;z-index:1;padding:4px 10px;border-radius:999px;background:var(--card)}
 .ckgo{min-height:54px;padding:0 28px;border-radius:999px;border:none;background:var(--accent);color:var(--onaccent);font:700 1rem var(--sans)}
 .ckname{width:100%;max-width:320px;min-height:48px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:600 1rem var(--sans);text-align:center}
 .ckchip.on{background:var(--lemon);border-color:var(--lemon);color:#2b2118}
-#dCook .cktray{max-height:34dvh;overflow-y:auto}
+#dCook .cktray{flex:0 1 auto;min-height:0;max-height:26dvh;overflow-y:auto}
+/* modalità cucina: pulsanti della stessa misura del pulsante chiudi della ricetta (34px) */
+#dCook .ckb{min-width:34px;height:34px;padding:0 10px;font-size:.95rem}
+#dCook #ckClose,#dCook #ckTm,#dCook #ckSetX{width:34px;padding:0}
+#dCook .ckstep button{min-height:34px;min-width:34px;padding:0 10px;font-size:.85rem}
+#dCook .ckgo{min-height:34px;padding:0 18px;font-size:.9rem}
+#dCook .cktm button{min-width:34px;min-height:34px;padding:0 10px;font-size:.8rem}
+#dCook .ckchip{min-height:34px;padding:0 12px;font-size:.85rem}
+#dCook .ckalert{flex:none;margin:6px 8px 0;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#b3261e;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.4);font:700 1.05rem/1.25 var(--sans);animation:ckflash .5s ease-in-out infinite alternate}
+@keyframes ckflash{to{filter:brightness(1.35)}}
+#dCook .ckalert[hidden]{display:none}
+#dCook .ckalert .ai{font-size:1.6rem}
+#dCook .ckalert .at{flex:1;min-width:0}
+#dCook .ckalert button{min-height:34px;min-width:34px;padding:0 16px;border-radius:999px;border:1.5px solid #fff;background:transparent;color:#fff;font:700 .9rem var(--sans)}
+@media (prefers-reduced-motion:reduce){#dCook .ckalert{animation:none}}
+/* selezione multipla */
+.card::after{content:"";display:none;position:absolute;bottom:10px;right:10px;width:26px;height:26px;box-sizing:border-box;border-radius:50%;border:2px solid var(--accent);background:var(--card);color:var(--onlemon);font:700 16px/22px var(--sans);text-align:center;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+body.selmode .card::after{display:block}
+.card.sel{outline:3px solid var(--lemon);outline-offset:-3px}
+.card.sel::after{content:"✓";background:var(--lemon);border-color:var(--lemon)}
+body.selmode .fab{display:none}
+body.selmode #list{margin-bottom:84px}
+.selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100vw - 24px);padding:5px;border:1.5px solid var(--accent);border-radius:999px;background:var(--accent);color:var(--onaccent);box-shadow:0 2px 8px rgba(40,25,10,.28)}
+.selbar[hidden]{display:none}
+.selbar,.selbar button{font:600 1.3rem/1 "Caveat","Segoe Script",cursive;letter-spacing:.01em}
+.selbar .sc{flex:1 1 auto;min-width:0;padding:2px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selbar button{flex:none}
+.selbar button{min-height:38px;min-width:38px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);white-space:nowrap;padding-top:2px}
+.selbar #selX{padding:0}
+.selbar #selDel{color:var(--danger)}
+.selbar button:disabled{opacity:.4}
+/* cestino e backup: pulsanti nel box scuro come la barra di selezione */
+#dTrash .actions,#dBk .actions,#dProp .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:max-content;max-width:100%;margin:22px auto 0;padding:5px;border:1.5px solid var(--accent);border-radius:26px;background:var(--accent);box-shadow:0 2px 8px rgba(40,25,10,.28)}
+#dTrash .actions .btn,#dBk .actions .btn,#dProp .actions .btn{flex:none;min-height:38px;padding:2px 12px 0;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:600 1.3rem/1 "Caveat","Segoe Script",cursive;letter-spacing:.01em;white-space:nowrap}
+#dTrash .actions .btn.del,#dBk .actions .btn.del{color:var(--danger)}
+#dBk .actions{justify-content:flex-start;margin:14px 0 0}
+/* strumenti: schede, tasti e pulsanti nel box scuro come la barra di selezione */
+#dProp .ptabs{box-sizing:border-box;width:100%;gap:6px;padding:5px;border:1.5px solid var(--accent);border-radius:999px;background:var(--accent);box-shadow:0 2px 8px rgba(40,25,10,.28)}
+#dProp .ptabs button{min-height:38px;padding:2px 4px 0;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:600 1.15rem/1 "Caveat","Segoe Script",cursive;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dProp .ptabs button.on{background:var(--lemon);border-color:var(--lemon);color:var(--onlemon)}
+#dProp .ck{gap:6px;padding:6px;border:1.5px solid var(--accent);border-radius:30px;background:var(--accent);box-shadow:0 2px 8px rgba(40,25,10,.28)}
+#dProp .ck button{min-height:50px;padding:2px 0 0;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:600 1.7rem/1 "Caveat","Segoe Script",cursive;box-shadow:none}
+#dProp .ck .fn{background:var(--tilebg);color:var(--muted);font-size:1.5rem}
+#dProp .ck .op{background:var(--tile);color:var(--text);font-size:1.8rem}
+#dProp .ck .eq{display:block;height:auto;margin:0;background:var(--lemon);border-color:var(--lemon);color:var(--onlemon)}
+#dProp .ck .op.act{background:var(--accent);color:var(--onaccent);border-color:var(--onaccent)}
+#dProp .ck button:active{transform:none;box-shadow:none}
+#dProp .peq .swp{margin:5px 0;padding:4px 18px;box-shadow:0 0 0 5px var(--accent)}
+/* conferma al tocco */
+button,.btn{transition:none}
+button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
+@media (prefers-reduced-motion:reduce){button,.btn{transition:none}button.fbp:not(:disabled),.btn.fbp{transform:none}}
 </style>
 </head>
 <body>
@@ -638,7 +689,8 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 </div></dialog>
 
 <dialog id="dView"><div class="body" id="vBody"></div></dialog>
-<dialog id="dCook"><div class="ckhead"><button type="button" class="ckb" id="ckClose" aria-label="Chiudi modalità cucina">✕</button><div class="ckt" id="ckTitle"></div><button type="button" class="ckb" id="ckTm" aria-label="Imposta un timer" title="Imposta un timer">⏱</button><button type="button" class="ckb" id="ckMinus" aria-label="Testo più piccolo">A−</button><button type="button" class="ckb" id="ckPlus" aria-label="Testo più grande">A+</button></div><div class="cksun" id="ckSun"></div><div class="ckmain" id="ckMain"></div><div class="ckset" id="ckSet" hidden><svg class="ckdial" id="ckDial" viewBox="0 0 240 240" role="img" aria-label="Quadrante del timer: trascina per scegliere i minuti"></svg><input type="text" id="ckName" class="ckname" maxlength="24" placeholder="Nome del timer (facoltativo, es. pasta)" autocomplete="off"><div class="ckstep"><button type="button" data-d="-60">−1′</button><button type="button" data-d="60">+1′</button><button type="button" data-d="30">+30″</button><button type="button" data-d="3600">+1 h</button></div><div class="ckact"><button type="button" class="ckgo" id="ckGo">▶ Avvia</button><button type="button" class="ckb" id="ckSetX" aria-label="Chiudi">✕</button></div></div><div class="cktray" id="ckTray" aria-live="polite"></div></dialog>
+<div class="selbar" id="selBar" hidden><button type="button" id="selX" aria-label="Esci dalla selezione">✕</button><span class="sc" id="selCount" aria-live="polite"></span><button type="button" id="selAll">Tutte</button><button type="button" id="selDel">🗑 Elimina</button></div>
+<dialog id="dCook"><div class="ckhead"><button type="button" class="ckb" id="ckClose" aria-label="Chiudi modalità cucina">✕</button><div class="ckt" id="ckTitle"></div><button type="button" class="ckb" id="ckTm" aria-label="Imposta un timer" title="Imposta un timer">⏱</button><button type="button" class="ckb" id="ckMinus" aria-label="Testo più piccolo">A−</button><button type="button" class="ckb" id="ckPlus" aria-label="Testo più grande">A+</button></div><div class="cksun" id="ckSun"></div><div class="ckalert" id="ckAlert" role="alert" hidden></div><div class="ckmain" id="ckMain"></div><div class="ckset" id="ckSet" hidden><svg class="ckdial" id="ckDial" viewBox="0 0 240 240" role="img" aria-label="Quadrante del timer: trascina per scegliere i minuti"></svg><input type="text" id="ckName" class="ckname" maxlength="24" placeholder="Nome del timer (facoltativo, es. pasta)" autocomplete="off"><div class="ckstep"><button type="button" data-d="-60">−1′</button><button type="button" data-d="60">+1′</button><button type="button" data-d="30">+30″</button><button type="button" data-d="3600">+1 h</button></div><div class="ckact"><button type="button" class="ckgo" id="ckGo">▶ Avvia</button><button type="button" class="ckb" id="ckSetX" aria-label="Chiudi">✕</button></div></div><div class="cktray" id="ckTray" aria-live="polite"></div></dialog>
 
 <dialog id="dPrint"><div class="body">
   <div class="xwrap"><button type="button" class="icon xbtn" id="pClose" title="Chiudi" aria-label="Chiudi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -672,7 +724,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
   <input type="file" id="fileIn" accept=".json,application/json" hidden>
   <p class="meta2">Oppure copia/incolla il testo (sostituisce tutte le ricette):</p>
   <textarea id="bkText" rows="8"></textarea>
-  <div class="actions"><button class="btn" id="copy">Copia</button><button class="btn sec" id="imp">Importa</button><button class="btn sec" id="bkClose">Chiudi</button></div>
+  <div class="actions"><button class="btn" id="copy">Copia</button><button class="btn sec" id="imp">Importa</button></div>
 </div></dialog>
 
 <script>
@@ -749,6 +801,7 @@ function render(){
   const items=recipes.filter(r=>(!cat||r.cat===cat)&&(!onlyFav||r.fav)&&(!s||r.title.toLowerCase().includes(s)||r.ingr.toLowerCase().includes(s)))
     .sort((a,b)=>a.title.localeCompare(b.title,'it'));
   const list=$('list');list.textContent='';
+  if(selMode){[...sel].forEach(id=>{if(!items.some(x=>x.id===id))sel.delete(id)});if(!sel.size)selExit();else selUpdate()}
   if(!items.length){
     const e=el('div',{className:'empty'},[el('b',{textContent:recipes.length?'Nessuna ricetta trovata':'Il ricettario è vuoto'}),
       document.createTextNode(recipes.length?'Prova con un altro filtro o un’altra parola.':'Premi “Nuova ricetta” per aggiungere la prima.')]);
@@ -759,24 +812,24 @@ function render(){
     pic.append(el('span',{className:'tag',textContent:r.cat}));
     const hb=el('span',{className:'heart'+(r.fav?'':' off'),innerHTML:I(HEART,!!r.fav),role:'button',tabIndex:0,title:r.fav?'Rimuovi dai preferiti':'Aggiungi ai preferiti'});
     hb.setAttribute('aria-label',hb.title);hb.setAttribute('aria-pressed',String(!!r.fav));
-    const tg=e=>{e.stopPropagation();e.preventDefault();r.fav=!r.fav;r.u=Date.now();persist();render()};
+    const tg=e=>{e.stopPropagation();e.preventDefault();if(selMode){selToggle(r.id);return}r.fav=!r.fav;r.u=Date.now();persist();render()};
     hb.onclick=tg;hb.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')tg(e)};
     pic.append(hb);
     const info=el('div',{className:'info'},[el('h3',{textContent:r.title}),
       el('div',{className:'meta'},[el('span',{innerHTML:I(CLK)+(+r.min||0)+' min'}),el('span',{innerHTML:I(USR)+(+r.serv||1)+' porz.'})]),prevEl(r)]);
-    const c=el('button',{className:'card'},[pic,info]);
+    const c=el('button',{className:'card'+(sel.has(r.id)?' sel':'')},[pic,info]);c.dataset.id=r.id;
     let lt=null,sx=0,sy=0;
     const clr=()=>{if(lt){clearTimeout(lt);lt=null}c.classList.remove('lpress')};
     c.addEventListener('pointerdown',e=>{
-      if(e.target.closest('.heart'))return;
+      if(e.target.closest('.heart')||selMode)return;
       sx=e.clientX;sy=e.clientY;c.classList.add('lpress');
       lt=setTimeout(()=>{lt=null;c.classList.remove('lpress');swallowClick=true;
         try{if(navigator.vibrate)navigator.vibrate(30)}catch(_){}
-        askDel(r.id)},550)});
+        selStart(r.id)},550)});
     c.addEventListener('pointermove',e=>{if(lt&&(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10))clr()});
     ['pointerup','pointercancel','pointerleave'].forEach(n=>c.addEventListener(n,clr));
     c.addEventListener('contextmenu',e=>e.preventDefault());
-    c.onclick=()=>{selId=r.id;rememberSearch();view(r.id)};list.append(c);
+    c.onclick=()=>{if(selMode){selToggle(r.id);return}selId=r.id;rememberSearch();view(r.id)};list.append(c);
   });
 }
 
@@ -785,9 +838,9 @@ function loadTrash(){try{const v=JSON.parse(localStorage.getItem(TKEY)||'[]');re
 let trash=loadTrash();
 function saveTrash(){try{localStorage.setItem(TKEY,JSON.stringify(trash));return true}catch(e){return false}}
 function updTrashBadge(){const b=$('trBadge');b.textContent=trash.length;b.hidden=!trash.length;$('trBtn').title='Cestino'+(trash.length?' ('+trash.length+')':'')}
-function askDel(id){
-  const r=recipes.find(x=>x.id===id);if(!r)return false;
-  if(!confirm('Eliminare «'+r.title+'»?\nPotrai recuperarla dal cestino per 30 giorni.'))return false;
+/* sposta una ricetta nel cestino senza chiedere né ridisegnare: null = non trovata, true = ok, false = cestino pieno */
+function trashOne(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return null;
   const copy=JSON.parse(JSON.stringify(r));
   recipes=recipes.filter(x=>x.id!==id);deleted[id]=Date.now();saveDel();
   persist(); // libera subito spazio in memoria
@@ -797,10 +850,58 @@ function askDel(id){
   if(!ok){copy.photo='';ok=saveTrash()}              // memoria piena: senza foto
   while(!ok&&trash.length>1){trash.shift();ok=saveTrash()} // poi libero le più vecchie
   if(!ok){trash.pop();saveTrash()}
+  return ok;
+}
+function askDel(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return false;
+  if(!confirm('Eliminare «'+r.title+'»?\nPotrai recuperarla dal cestino per 30 giorni.'))return false;
+  const ok=trashOne(id);
   render();updTrashBadge();
   toast(ok?'"'+r.title+'" spostata nel cestino':'"'+r.title+'" eliminata (cestino pieno)',ok?id:null);
   return true;
 }
+/* selezione multipla: pressione prolungata su una ricetta, poi tocco per aggiungere/togliere */
+let selMode=false;const sel=new Set();
+function selUpdate(){
+  const n=sel.size;
+  document.body.classList.toggle('selmode',selMode);
+  $('selBar').hidden=!selMode;
+  $('selCount').textContent=n===1?'1 selezionata':n+' selezionate';
+  $('selDel').disabled=!n;
+}
+function selExit(){
+  selMode=false;sel.clear();
+  document.querySelectorAll('#list .card.sel').forEach(c=>c.classList.remove('sel'));
+  selUpdate();
+}
+function selToggle(id){
+  if(sel.has(id))sel.delete(id);else sel.add(id);
+  const c=$('list').querySelector('.card[data-id="'+id+'"]');if(c)c.classList.toggle('sel',sel.has(id));
+  if(!sel.size)selExit();else selUpdate();
+}
+function selStart(id){
+  selMode=true;sel.clear();sel.add(id);
+  const c=$('list').querySelector('.card[data-id="'+id+'"]');if(c)c.classList.add('sel');
+  selUpdate();
+}
+$('selX').onclick=selExit;
+$('selAll').onclick=()=>{
+  const cs=[...$('list').querySelectorAll('.card[data-id]')];
+  const all=cs.length&&cs.every(c=>sel.has(c.dataset.id));
+  cs.forEach(c=>{if(all)sel.delete(c.dataset.id);else sel.add(c.dataset.id);c.classList.toggle('sel',sel.has(c.dataset.id))});
+  if(!sel.size)selExit();else selUpdate();
+};
+$('selDel').onclick=async()=>{
+  const ids=[...sel];if(!ids.length)return;
+  const one=ids.length===1?recipes.find(x=>x.id===ids[0]):null;
+  const go=await ask((one?'Eliminare «'+one.title+'»?':'Eliminare '+ids.length+' ricette?')+' Potrai recuperarle dal cestino per 30 giorni.','Elimina');
+  if(!go)return;
+  let full=false,n=0;
+  ids.forEach(id=>{const r=trashOne(id);if(r!==null)n++;if(r===false)full=true});
+  selExit();render();updTrashBadge();
+  toast(n+(n===1?' ricetta spostata nel cestino':' ricette spostate nel cestino')+(full?' (cestino pieno: alcune senza foto)':''),full?null:ids);
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selMode&&!document.querySelector('dialog[open]'))selExit()});
 // dopo una pressione prolungata il rilascio del dito non deve aprire la ricetta sotto (la lista viene ridisegnata)
 let swallowClick=false;
 document.addEventListener('pointerdown',()=>{swallowClick=false},true);
@@ -809,7 +910,7 @@ let toastT=null;
 function toast(msg,undoId){
   let t=$('toast');if(t)t.remove();clearTimeout(toastT);
   t=el('div',{id:'toast',role:'status'},[el('span',{textContent:msg})]);
-  if(undoId){const u=el('button',{type:'button',textContent:'Annulla'});u.onclick=()=>{restoreTrash(undoId);t.remove()};t.append(u)}
+  if(undoId){const u=el('button',{type:'button',textContent:'Annulla'});u.onclick=()=>{[].concat(undoId).forEach(restoreTrash);t.remove()};t.append(u)}
   document.body.append(t);toastT=setTimeout(()=>t.remove(),6000);
 }
 function ask(msg,label){
@@ -1276,7 +1377,6 @@ $('q').addEventListener('keydown',e=>{if(e.key==='Enter'){rememberSearch();$('hi
 document.addEventListener('click',e=>{if(e.target!==$('q')&&!$('hist').contains(e.target))$('hist').hidden=true});
 
 $('bkBtn').onclick=()=>{$('bkText').value=JSON.stringify(recipes);updBk();$('dBk').showModal()};
-$('bkClose').onclick=()=>$('dBk').close();
 $('bkX').onclick=()=>$('dBk').close();
 $('loadFile').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=async e=>{
@@ -1390,14 +1490,10 @@ function parseTimes(t){
 function ckFmt(ms){const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'):m+':'+String(x).padStart(2,'0')}
 function ckAudio(){try{ck.ac=ck.ac||new (window.AudioContext||window.webkitAudioContext)();if(ck.ac.state==='suspended')ck.ac.resume()}catch(e){}}
 function ckBeep(){
-  try{ckAudio();const a=ck.ac;if(!a)return;
-    [0,.35,.7].forEach(d=>{const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+d;
-      o.type='sine';o.frequency.value=880;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4,t+.02);g.gain.linearRampToValueAtTime(0,t+.25);
-      o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.3)});
-  }catch(e){}
-  try{if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}catch(e){}
+  /* solo vibrazione: nessun suono */
+  try{if(navigator.vibrate)navigator.vibrate([300,120,300,120,300,120,300])}catch(e){}
 }
-function ckAlarm(){if(ck.al)return;ckBeep();ck.al=setInterval(()=>{if(ck.timers.some(t=>t.ring))ckBeep();else ckAlarmStop()},2200)}
+function ckAlarm(){if(ck.al)return;ckBeep();ck.al=setInterval(()=>{if(ck.timers.some(t=>t.ring))ckBeep();else ckAlarmStop()},1800)}
 function ckAlarmStop(){if(ck.al){clearInterval(ck.al);ck.al=null}}
 function ckTray(){
   const tr=$('ckTray');tr.textContent='';
@@ -1413,6 +1509,14 @@ function ckTray(){
     tr.append(row);
   });
   document.querySelectorAll('#ckMain .ckchip').forEach(c=>c.classList.toggle('on',ck.timers.some(t=>t.label===c.dataset.k)));
+  const rg=ck.timers.filter(t=>t.ring),al=$('ckAlert');
+  al.textContent='';
+  if(rg.length){
+    const stop=el('button',{type:'button',textContent:'Ferma'});
+    stop.onclick=()=>{rg.forEach(t=>{ck.timers=ck.timers.filter(x=>x.id!==t.id)});ckTray();ckAlarmStop();if(!ck.timers.length&&ck.tick){clearInterval(ck.tick);ck.tick=null}};
+    al.append(el('span',{className:'ai',textContent:'⏰'}),el('span',{className:'at',textContent:'Tempo scaduto! '+rg.map(t=>t.label).join(' · ')}),stop);
+    al.hidden=false;
+  }else al.hidden=true;
 }
 function ckTick(){
   const now=Date.now();let ch=false;
@@ -1423,7 +1527,7 @@ function ckTick(){
 }
 function ckDrop(id){ck.timers=ck.timers.filter(t=>t.id!==id);ckTray();if(!ck.timers.some(t=>t.ring))ckAlarmStop();if(!ck.timers.length&&ck.tick){clearInterval(ck.tick);ck.tick=null}}
 function ckStart(lbl,secs,uniq){
-  ckAudio();
+  ckAudio();fbTick(true);
   if(!uniq)ck.timers=ck.timers.filter(x=>x.label!==lbl);
   ck.timers.push({id:++ck.n,label:lbl,secs,end:Date.now()+secs*1000,ring:false});
   ckTray();if(!ck.tick)ck.tick=setInterval(ckTick,500);
@@ -1548,6 +1652,41 @@ document.addEventListener('visibilitychange',()=>{
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* conferma al tocco: vibrazione per tutti i pulsanti; avvio timer: vibrazione doppia */
+function fbTick(strong){
+  try{if(navigator.vibrate)navigator.vibrate(strong?[25,40,25]:12)}catch(e){}
+}
+/* effetto di pressione gestito a mano (non con :active, che sui telefoni resta "appiccicato"):
+   si accende al tocco e si spegne al rilascio, sempre prima del click e quindi del cambio di sezione */
+let fbEl=null,fbDone=null,fbRe=false;
+function fbClear(){if(fbEl){fbEl.classList.remove('fbp');fbEl=null}}
+document.addEventListener('pointerdown',e=>{
+  fbClear();fbDone=null;
+  const b=e.target.closest&&e.target.closest('button,.btn,[role="button"]');
+  if(b&&!b.disabled){fbEl=b;b.classList.add('fbp')}
+},true);
+/* al rilascio il pulsante torna subito normale; ricordo quale era per ritardare l'azione (vedi sotto) */
+document.addEventListener('pointerup',()=>{fbDone=fbEl;fbClear()},true);
+['pointercancel','dragstart','contextmenu','scroll'].forEach(n=>document.addEventListener(n,()=>{fbDone=null;fbClear()},true));
+window.addEventListener('blur',fbClear);
+window.addEventListener('pagehide',fbClear);
+document.addEventListener('visibilitychange',()=>{fbClear();if(!document.hidden&&ck.timers.length)ckTick()});
+/* l'azione del pulsante parte solo dopo che il colore normale è stato davvero disegnato a schermo
+   (due frame): il click originale viene fermato e rilanciato subito dopo */
+document.addEventListener('click',e=>{
+  if(fbRe)return;
+  const was=fbDone;fbDone=null;fbClear();
+  if(e.defaultPrevented)return; /* click già annullato (es. dopo pressione prolungata): non va rilanciato */
+  const b=e.target.closest&&e.target.closest('button,.btn,[role="button"]');
+  if(!b||b.disabled)return;
+  if(!(b.id==='ckGo'||b.classList.contains('ckchip')))fbTick(false); /* questi chiamano ckStart, che dà il segnale forte */
+  if(was!==b)return; /* tastiera o tocco non da puntatore: nessun ritardo */
+  e.preventDefault();e.stopImmediatePropagation();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    fbRe=true;try{b.click()}finally{fbRe=false}
+  }));
+},true);
 
 const sp=$('splash');let seen=false;
 try{seen=sessionStorage.getItem('splash-seen')==='1'}catch(e){}
