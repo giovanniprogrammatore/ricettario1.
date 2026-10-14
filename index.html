@@ -158,7 +158,7 @@ box-shadow:0 3px 0 color-mix(in srgb,var(--border) 85%,#000),0 6px 10px -4px rgb
 .hi{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;margin:6px 0;color:var(--text)}
 .hi b{display:block;font-weight:700}.hi small{display:block;color:var(--muted);margin-top:2px;line-height:1.35}
 .vact{flex-wrap:nowrap;gap:6px}
-#dView .vact .btn{flex:1 1 0;min-width:0;padding:10px 4px;font-size:.84rem;white-space:nowrap;min-height:44px;text-align:center}
+#dView .vact .btn{flex:1 1 0;min-width:0;padding:10px 4px;font-size:1.2rem;white-space:nowrap;min-height:44px;text-align:center}
 .xwrap{position:sticky;top:12px;height:0;z-index:5}
 .xbtn{position:absolute;right:-8px;top:0;box-shadow:0 2px 8px rgba(0,0,0,.28)}
 .hero{display:block;width:calc(100% + 40px);margin:-20px -20px 16px;height:220px;object-fit:cover}
@@ -301,7 +301,8 @@ main::-webkit-scrollbar{display:none;width:0;height:0}
 #dView ul.ing li::before{width:6px;height:1px;border-radius:0;box-shadow:none;background:var(--accent);top:1.1em;left:2px}
 #dView ol.st li{padding-left:42px}
 #dView ol.st li::before{content:counter(s,upper-roman) ".";background:none;color:var(--accent);width:auto;height:auto;border-radius:0;display:block;font:400 1.25rem/1.2 "IM Fell English",Georgia,serif}
-#dView .btn{font-family:var(--sans)}
+#dView .btn{font:600 1.3rem/1 "Caveat","Segoe Script",cursive;letter-spacing:.01em}
+#save,#cancel{font:600 1.3rem/1 "Caveat","Segoe Script",cursive;letter-spacing:.01em}
 #dView .hero{filter:sepia(.4) contrast(.95)}
 .pic img,#dView .hero{filter:none}
 .pic,.pic img{backface-visibility:visible}
@@ -485,6 +486,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 #dCook #ckClose{order:2;margin-left:auto}
 #dCook .ckt{order:3;flex:0 0 100%;min-width:0;font:400 1.7rem/1.15 "Yellowtail",cursive;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #dCook .ckb{flex:none;min-width:54px;height:54px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card);color:var(--text);font:700 1.15rem var(--sans)}
+#dCook .cksun:empty{display:none}
 #dCook .cksun{flex:none;text-align:center;padding:5px 12px;color:var(--muted);font:600 .76rem var(--sans)}
 #dCook .ckmain{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 28px;font-family:"IM Fell English",Georgia,serif;font-size:1.4rem;line-height:1.35}
 #dCook .ckmain h3{display:flex;align-items:center;gap:12px;justify-content:center;margin:18px 0 8px;font:400 1.5em/1.1 "Yellowtail",cursive}
@@ -530,6 +532,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 #dCook .cktray{flex:0 1 auto;min-height:0;max-height:26dvh;overflow-y:auto}
 /* modalità cucina: pulsanti della stessa misura del pulsante chiudi della ricetta (34px) */
 #dCook .ckb{min-width:34px;height:34px;padding:0 10px;font-size:.95rem}
+#dCook #ckMinus,#dCook #ckPlus{display:inline-flex;align-items:center;justify-content:center;padding:0;width:34px;line-height:1;font-size:1.3rem}
 #dCook #ckClose,#dCook #ckTm,#dCook #ckSetX{width:34px;padding:0}
 #dCook .ckstep button{min-height:34px;min-width:34px;padding:0 10px;font-size:.85rem}
 #dCook .ckgo{min-height:34px;padding:0 18px;font-size:.9rem}
@@ -690,7 +693,7 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 
 <dialog id="dView"><div class="body" id="vBody"></div></dialog>
 <div class="selbar" id="selBar" hidden><button type="button" id="selX" aria-label="Esci dalla selezione">✕</button><span class="sc" id="selCount" aria-live="polite"></span><button type="button" id="selAll">Tutte</button><button type="button" id="selDel">🗑 Elimina</button></div>
-<dialog id="dCook"><div class="ckhead"><button type="button" class="ckb" id="ckClose" aria-label="Chiudi modalità cucina">✕</button><div class="ckt" id="ckTitle"></div><button type="button" class="ckb" id="ckTm" aria-label="Imposta un timer" title="Imposta un timer">⏱</button><button type="button" class="ckb" id="ckMinus" aria-label="Testo più piccolo">A−</button><button type="button" class="ckb" id="ckPlus" aria-label="Testo più grande">A+</button></div><div class="cksun" id="ckSun"></div><div class="ckalert" id="ckAlert" role="alert" hidden></div><div class="ckmain" id="ckMain"></div><div class="ckset" id="ckSet" hidden><svg class="ckdial" id="ckDial" viewBox="0 0 240 240" role="img" aria-label="Quadrante del timer: trascina per scegliere i minuti"></svg><input type="text" id="ckName" class="ckname" maxlength="24" placeholder="Nome del timer (facoltativo, es. pasta)" autocomplete="off"><div class="ckstep"><button type="button" data-d="-60">−1′</button><button type="button" data-d="60">+1′</button><button type="button" data-d="30">+30″</button><button type="button" data-d="3600">+1 h</button></div><div class="ckact"><button type="button" class="ckgo" id="ckGo">▶ Avvia</button><button type="button" class="ckb" id="ckSetX" aria-label="Chiudi">✕</button></div></div><div class="cktray" id="ckTray" aria-live="polite"></div></dialog>
+<dialog id="dCook"><div class="ckhead"><button type="button" class="ckb" id="ckClose" aria-label="Chiudi modalità cucina">✕</button><div class="ckt" id="ckTitle"></div><button type="button" class="ckb" id="ckTm" aria-label="Imposta un timer" title="Imposta un timer">⏱</button><button type="button" class="ckb" id="ckMinus" aria-label="Testo più piccolo">−</button><button type="button" class="ckb" id="ckPlus" aria-label="Testo più grande">+</button></div><div class="cksun" id="ckSun"></div><div class="ckalert" id="ckAlert" role="alert" hidden></div><div class="ckmain" id="ckMain"></div><div class="ckset" id="ckSet" hidden><svg class="ckdial" id="ckDial" viewBox="0 0 240 240" role="img" aria-label="Quadrante del timer: trascina per scegliere i minuti"></svg><input type="text" id="ckName" class="ckname" maxlength="24" placeholder="Nome del timer (facoltativo, es. pasta)" autocomplete="off"><div class="ckstep"><button type="button" data-d="-60">−1′</button><button type="button" data-d="60">+1′</button><button type="button" data-d="30">+30″</button><button type="button" data-d="3600">+1 h</button></div><div class="ckact"><button type="button" class="ckgo" id="ckGo">▶ Avvia</button><button type="button" class="ckb" id="ckSetX" aria-label="Chiudi">✕</button></div></div><div class="cktray" id="ckTray" aria-live="polite"></div></dialog>
 
 <dialog id="dPrint"><div class="body">
   <div class="xwrap"><button type="button" class="icon xbtn" id="pClose" title="Chiudi" aria-label="Chiudi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -1532,7 +1535,7 @@ function ckStart(lbl,secs,uniq){
   ck.timers.push({id:++ck.n,label:lbl,secs,end:Date.now()+secs*1000,ring:false});
   ckTray();if(!ck.tick)ck.tick=setInterval(ckTick,500);
 }
-function ckSun(){$('ckSun').textContent=ck.wl?'☀ Lo schermo resta acceso mentre cucini':'☾ Il telefono potrebbe spegnere lo schermo: tocca ogni tanto'}
+function ckSun(){$('ckSun').textContent=ck.wl?'☀ Lo schermo resta acceso mentre cucini':''}
 async function ckLock(){
   try{
     if('wakeLock' in navigator){
