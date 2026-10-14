@@ -417,7 +417,15 @@ body>#printArea{display:block!important}
 .card:focus,.card:focus-visible{outline:none}
 /* menu aperto: sopra al pulsante "Nuova ricetta" e sempre dentro lo schermo */
 .bar.up,.bar:has(.ddpanel:not([hidden])){z-index:30}
-.ddpanel.scr{box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#catBack{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:25;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
+body.catopen #catBack{display:block}
+.ddpanel.scr:not([hidden]){display:flex}
+.ddpanel.scr{box-sizing:border-box;flex-direction:column;overflow:hidden}
+.ddpanel[hidden]{display:none!important}
+.ddpanel .ddlist{position:relative}
+.ddpanel.scr .ddlist{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none;-ms-overflow-style:none}
+.ddpanel.scr .ddlist::-webkit-scrollbar{display:none;width:0;height:0}
+.ddpanel.scr .ddhead{flex:none}
 .ddpanel.scr::before{display:none}
 .ddpanel{scrollbar-width:none;-ms-overflow-style:none}.ddpanel::-webkit-scrollbar{display:none;width:0;height:0}
 
@@ -582,6 +590,10 @@ body.selmode #list{margin-bottom:84px}
 button,.btn{transition:none}
 button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 @media (prefers-reduced-motion:reduce){button,.btn{transition:none}button.fbp:not(:disabled),.btn.fbp{transform:none}}
+/* fix pulsanti azione nella ricetta aperta (mobile): griglia a 2 colonne, testo centrato e mai tagliato */
+#dView .vact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#dView .vact .btn{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-width:0;padding:4px 10px 0;min-height:46px;line-height:1.1;white-space:normal;text-align:center}
+#dView .vact .btn:last-child:nth-child(odd){grid-column:1/-1}
 </style>
 </head>
 <body>
@@ -622,6 +634,8 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
   <details class="web" id="webBox"><summary>Carica ricetta</summary>
     <p class="meta2">Apri la ricetta nel browser, seleziona e copia tutto il testo (titolo, ingredienti, procedimento), poi incollalo qui sotto: i campi si compilano da soli e puoi correggerli.</p>
     <div class="actions"><button type="button" class="btn sec" id="claudeBtn">💬 Manda link o foto a Claude</button><button type="button" class="btn sec" id="dictBtn">🎤 Detta a voce</button></div>
+    <label for="dictTarget">Scegli riquadro salvataggio dettato</label>
+    <select id="dictTarget" aria-label="Scegli riquadro salvataggio dettato"><option value="webText">Salva dettato</option><option value="title">Titolo</option><option value="ingr">Ingredienti</option><option value="steps">Procedimento</option></select>
     <div class="recbar" id="recBar" role="status" aria-live="polite" hidden><i class="recdot"></i><span>Sto registrando</span><span class="tm" id="recTm">0:00</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
     <p class="meta2" id="dictHint" hidden>Parla in italiano: dì il titolo, poi «Ingredienti» e un ingrediente alla volta facendo una piccola pausa tra uno e l'altro, poi «Procedimento» e un passaggio alla volta. Tocca di nuovo il pulsante per fermare.</p>
     <p class="meta2" id="ocrMsg">Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.</p>
@@ -731,8 +745,8 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 </div></dialog>
 
 <script>
-const CATS=['Antipasti','Primi','Secondi','Contorni','Dolci','Cocktail','Altro'];
-const EMO={Antipasti:'🧀',Primi:'🍝',Secondi:'🥩',Contorni:'🥗',Dolci:'🍰',Cocktail:'🍸',Altro:'🍽️'};
+const CATS=['Antipasti','Primi','Secondi','Contorni','Dolci','Cocktail','Salse','Marinature','Altro'];
+const EMO={Antipasti:'🧀',Primi:'🍝',Secondi:'🥩',Contorni:'🥗',Dolci:'🍰',Cocktail:'🍸',Salse:'🥫',Marinature:'🧄',Altro:'🍽️'};
 const KEY='ricettario-v1';
 let selId=null,recipes=[],cat=null,onlyFav=false,editId=null,photoData=null;
 const $=id=>document.getElementById(id);
@@ -752,6 +766,7 @@ function buildCat(){
   catList.textContent='';
   catList.append(el('div',{className:'ddhead',textContent:'— Il menu del giorno —'}));
   const opts=[{v:'',t:'Tutte le ricette',n:'★',e:'📖'}].concat(CATS.map((c,i)=>({v:c,t:c,n:String(i+1),e:EMO[c]})));
+  const list=el('div',{className:'ddlist'});
   opts.forEach(o=>{
     const cnt=o.v?recipes.filter(r=>r.cat===o.v).length:recipes.length;
     const b=el('button',{type:'button',className:'ddopt',role:'option'});
@@ -759,8 +774,9 @@ function buildCat(){
     b.setAttribute('aria-selected',String((cat||'')===o.v));
     b.append(el('span',{className:'n',textContent:o.n}),el('span',{className:'t',textContent:o.t}),el('span',{className:'c',textContent:cnt}));
     b.onclick=()=>{cat=o.v||null;closeCat();render()};
-    catList.append(b);
+    list.append(b);
   });
+  catList.append(list);
 }
 function fitCat(){ // il pannello non deve uscire dallo schermo: se non ci sta, scorre al suo interno
   catList.classList.remove('scr');catList.style.maxHeight='';
@@ -769,9 +785,12 @@ function fitCat(){ // il pannello non deve uscire dallo schermo: se non ci sta, 
   if(catList.scrollHeight>avail){catList.style.maxHeight=Math.max(120,avail)+'px';catList.classList.add('scr')}
 }
 window.addEventListener('resize',fitCat);
-function openCat(){buildCat();catList.hidden=false;document.querySelector('.bar').classList.add('up');fitCat();catBtn.setAttribute('aria-expanded','true');const sel=catList.querySelector('[aria-selected="true"]');sel&&sel.focus({preventScroll:true})}
-function closeCat(){catList.hidden=true;document.querySelector('.bar').classList.remove('up');catBtn.setAttribute('aria-expanded','false')}
+function openCat(){buildCat();catList.hidden=false;document.body.classList.add('catopen');document.querySelector('.bar').classList.add('up');fitCat();catBtn.setAttribute('aria-expanded','true');const sel=catList.querySelector('[aria-selected="true"]');if(sel){sel.focus({preventScroll:true});const l=catList.querySelector('.ddlist');if(l&&catList.classList.contains('scr'))l.scrollTop=Math.max(0,sel.offsetTop-l.clientHeight/2)}}
+function closeCat(){catList.hidden=true;document.body.classList.remove('catopen');document.querySelector('.bar').classList.remove('up');catBtn.setAttribute('aria-expanded','false')}
 catBtn.onclick=()=>catList.hidden?openCat():closeCat();
+const catBack=document.createElement('div');catBack.id='catBack';catBack.setAttribute('aria-hidden','true');document.body.appendChild(catBack);
+catBack.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeCat()});
+catBack.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 document.addEventListener('click',e=>{if(!$('dd').contains(e.target))closeCat()});
 document.addEventListener('keydown',e=>{
   if(catList.hidden)return;
@@ -977,14 +996,14 @@ function view(id){
     el('h3',{className:'sec',textContent:'Ingredienti'}),el('div',{className:'panel'},[ul]),
     el('h3',{className:'sec',textContent:'Procedimento'}),ol);
   if(safeUrl(r.src))b.append(el('a',{className:'srcl',href:safeUrl(r.src),target:'_blank',rel:'noopener noreferrer',textContent:'🌐 Fonte: '+(()=>{try{return new URL(r.src).hostname.replace(/^www\./,'')}catch(e){return r.src}})()}));
-  const fav=el('button',{className:'btn sec',textContent:(r.fav?'♥ ':'♡ ')+'Preferita',title:r.fav?'Rimuovi dai preferiti':'Aggiungi ai preferiti'});
+  const fav=el('button',{className:r.fav?'btn':'btn sec',textContent:'Preferita',title:r.fav?'Rimuovi dai preferiti':'Aggiungi ai preferiti'});
   fav.setAttribute('aria-label',fav.title);
   fav.onclick=()=>{r.fav=!r.fav;r.u=Date.now();persist();$('dView').close();render()};
   const ed=el('button',{className:'btn sec',textContent:'Modifica'});ed.onclick=()=>{$('dView').close();openForm(id)};
   const del=el('button',{className:'btn del',textContent:'Elimina'});
   del.onclick=()=>{if(askDel(id))$('dView').close()};
   const acts=[fav,ed,del];
-  if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'+ Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=()=>{$('dView').close();openForm(id);$('photo').click()};acts.splice(1,0,ph)}
+  if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=()=>{$('dView').close();openForm(id);$('photo').click()};acts.splice(1,0,ph)}
   b.append(el('div',{className:'actions vact'},acts));
   b.scrollTop=0;$('dView').showModal();
 }
@@ -1038,6 +1057,8 @@ function guessCat(t){t=t.toLowerCase();
   if(/insalata|contorno|patate|verdure|salad/.test(t))return 'Contorni';
   if(/bruschett|crostini|antipast|tartine|frittata/.test(t))return 'Antipasti';
   if(/pollo|arrosto|carne|pesce|polpett|salsicc|brasato|cotolett|bistecc|chicken|steak/.test(t))return 'Secondi';
+  if(/marinat|marinatur|marinade/.test(t))return 'Marinature';
+  if(/\bsalsa\b|\bsalse\b|\bsugo\b|maionese|pesto|ragù|ragu\b|besciamella|\bsauce\b/.test(t))return 'Salse';
   return null}
 function parseWeb(raw){
   const out={title:'',ingr:'',steps:'',min:0,serv:0,cat:null,ok:true};
@@ -1087,28 +1108,46 @@ const runWeb=fromOcr=>{
 };
 $('webGo').onclick=()=>runWeb(false);
 /* dettatura a voce: ogni frase (pausa) diventa una riga; «Ingredienti»/«Procedimento» all'inizio di una frase diventano titoli di sezione */
-let rec=null,recT=null;
+let rec=null,recT=null,recWant=false;
 const recShow=on=>{
   const bar=$('recBar'),tm=$('recTm');
   clearInterval(recT);recT=null;bar.hidden=!on;
   if(on){const t0=Date.now();tm.textContent='0:00';recT=setInterval(()=>{const n=Math.floor((Date.now()-t0)/1000);tm.textContent=Math.floor(n/60)+':'+String(n%60).padStart(2,'0')},500)}
 };
+/* riquadro di destinazione: scelto dal menu, oppure l'ultimo riquadro toccato */
+['title','ingr','steps','webText'].forEach(id=>$(id).addEventListener('focus',()=>{$('dictTarget').value=id}));
 $('dictBtn').onclick=()=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$('ocrMsg'),t=$('webText'),b=$('dictBtn'),h=$('dictHint');
-  if(rec){rec.stop();return}
-  const fallback=()=>{h.hidden=false;t.focus();m.textContent='La dettatura dentro l\'app non è disponibile qui: tocca il microfono sulla tastiera del telefono e detta nella casella sotto.'};
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$('ocrMsg'),b=$('dictBtn'),h=$('dictHint');
+  const tgt=()=>$($('dictTarget').value);
+  const finish=()=>{
+    recWant=false;rec=null;recShow(false);b.textContent='🎤 Detta a voce';b.classList.remove('rec');
+    if(/Ti ascolto|Sto sentendo/.test(m.textContent)&&tgt().value.trim().length>=2)m.textContent=tgt().id==='webText'?'Dettatura finita. Controlla il testo e tocca «Compila i campi».':'Dettatura finita. Controlla il riquadro e correggi se serve.';
+  };
+  if(rec||recWant){recWant=false;if(rec){try{rec.stop()}catch(e){finish()}}else finish();return}
+  const fallback=()=>{h.hidden=false;tgt().focus();m.textContent='La dettatura dentro l\'app non è disponibile qui: tocca il microfono sulla tastiera del telefono e detta nel riquadro.'};
   if(!SR){fallback();return}
   const add=tx=>{
+    const t=tgt();
     tx=tx.replace(/\s*\ba capo\b\s*/gi,'\n').trim();if(!tx)return;
-    const k=/^(ingredienti|procedimento|preparazione)\b[\s:,.]*([\s\S]*)$/i.exec(tx);
-    if(k)tx=k[1][0].toUpperCase()+k[1].slice(1).toLowerCase()+(k[2]?'\n'+k[2]:'');
-    tx=tx.charAt(0).toUpperCase()+tx.slice(1);
-    t.value=(t.value.trim()?t.value.replace(/\s+$/,'')+'\n':'')+tx;
+    if(t.id==='title'){
+      const v=((t.value.trim()?t.value.trim()+' ':'')+tx.replace(/\s*\n+\s*/g,' ')).trim();
+      t.value=v.charAt(0).toUpperCase()+v.slice(1);
+    }else{
+      if(t.id==='webText'){
+        const k=/^(ingredienti|procedimento|preparazione)\b[\s:,.]*([\s\S]*)$/i.exec(tx);
+        if(k)tx=k[1][0].toUpperCase()+k[1].slice(1).toLowerCase()+(k[2]?'\n'+k[2]:'');
+      }
+      tx=tx.charAt(0).toUpperCase()+tx.slice(1);
+      t.value=(t.value.trim()?t.value.replace(/\s+$/,'')+'\n':'')+tx;
+      t.scrollTop=t.scrollHeight;
+    }
+    saveDraft();
   };
-  try{
-    rec=new SR();rec.lang='it-IT';rec.continuous=true;rec.interimResults=true;
-    rec.onstart=()=>{b.textContent='⏹ Fine dettatura';b.classList.add('rec');recShow(true);h.hidden=false;m.textContent='Ti ascolto… parla ora.'};
-    rec.onresult=ev=>{
+  /* il browser chiude da solo il riconoscimento dopo un po' di silenzio o di tempo: finché l'utente non preme «Fine dettatura» lo facciamo ripartire */
+  const start=()=>{
+    const r0=new SR();rec=r0;r0.lang='it-IT';r0.continuous=true;r0.interimResults=true;
+    r0.onstart=()=>{b.textContent='⏹ Fine dettatura';b.classList.add('rec');if($('recBar').hidden)recShow(true);h.hidden=false;m.textContent='Ti ascolto… parla ora.'};
+    r0.onresult=ev=>{
       let interim='';
       for(let i=ev.resultIndex;i<ev.results.length;i++){
         const r=ev.results[i],tx=r[0].transcript;
@@ -1116,14 +1155,18 @@ $('dictBtn').onclick=()=>{
       }
       m.textContent=interim?'Sto sentendo: '+interim.trim():'Ti ascolto…';
     };
-    rec.onerror=ev=>{
-      recShow(false);
-      if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){m.textContent='Il microfono non è permesso: abilitalo nelle impostazioni del browser, oppure usa il microfono della tastiera.';h.hidden=false}
-      else if(ev.error!=='no-speech'&&ev.error!=='aborted')m.textContent='Dettatura interrotta ('+ev.error+'). Puoi riprovare o usare il microfono della tastiera.';
+    r0.onerror=ev=>{
+      if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){recWant=false;m.textContent='Il microfono non è permesso: abilitalo nelle impostazioni del browser, oppure usa il microfono della tastiera.';h.hidden=false}
+      else if(ev.error!=='no-speech'&&ev.error!=='aborted'){recWant=false;m.textContent='Dettatura interrotta ('+ev.error+'). Puoi riprovare o usare il microfono della tastiera.'}
     };
-    rec.onend=()=>{rec=null;recShow(false);b.textContent='🎤 Detta a voce';b.classList.remove('rec');if(t.value.trim().length>=20&&/Dettatura|Ti ascolto|Sto sentendo/.test(m.textContent))m.textContent='Dettatura finita. Controlla il testo e tocca «Compila i campi».'};
-    rec.start();
-  }catch(e){rec=null;recShow(false);fallback()}
+    r0.onend=()=>{
+      rec=null;
+      if(recWant){setTimeout(()=>{if(!recWant)return;try{start()}catch(e){finish()}},250);return}
+      finish();
+    };
+    r0.start();
+  };
+  try{recWant=true;start()}catch(e){rec=null;recWant=false;recShow(false);fallback()}
 };
 
 /* manda link o foto della ricetta a Claude: apre una chat con il messaggio già pronto */
@@ -1345,7 +1388,7 @@ $('save').onclick=()=>{
 };
 $('fClose').onclick=()=>$('dForm').close();
 $('cancel').onclick=()=>{clearDraft();$('dForm').close()};
-$('add').onclick=()=>openForm();
+$('add').onclick=()=>{if(!catList.hidden){closeCat();return}openForm()};
 $('favBtn').onclick=()=>{onlyFav=!onlyFav;render()};
 $('q').oninput=render;
 // --- cronologia delle ricerche ---
