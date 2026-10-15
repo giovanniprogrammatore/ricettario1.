@@ -620,6 +620,19 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
 #cat,#cat:focus,#cat:focus-visible{outline:none;-webkit-tap-highlight-color:transparent}
 #cat:focus,#cat:focus-visible{border-color:var(--border)}
 }
+/* Categoria su telefono: lista propria al posto della rotella nativa di iOS */
+#cfWrap{display:none}
+@media (hover:none){
+#cat{display:none}
+#cfWrap{display:block}
+#cfBtn{display:block;width:100%;text-align:left;font:inherit;color:var(--text);background-color:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 44px 11px 13px;margin-top:5px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b3b2f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:15px 15px;-webkit-tap-highlight-color:transparent}
+#cfList{margin-top:6px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);max-height:40vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#cfList[hidden]{display:none}
+#cfList button{display:block;width:100%;text-align:left;font:inherit;color:var(--text);background:transparent;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:13px 14px;-webkit-tap-highlight-color:transparent}
+#cfList button:last-child{border-bottom:0}
+#cfList button[aria-selected="true"]{background:var(--accent);color:var(--onaccent)}
+}
+@media (hover:none) and (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cfBtn{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e6d2aa' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}}
 </style>
 </head>
 <body>
@@ -672,7 +685,7 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
   <div class="pick"><input type="file" id="photo" accept="image/*" hidden><label class="drop" for="photo" id="drop"><img id="pv" hidden alt=""><span id="dropTxt"></span></label><button type="button" class="btn sec" id="rmPhoto" hidden>Rimuovi foto</button></div>
   <label>Titolo</label><input id="title">
   <label>Link della fonte (facoltativo)</label><input id="src" type="url" inputmode="url" placeholder="https://…">
-  <label for="cat">Categoria</label><select id="cat"></select>
+  <label for="cat">Categoria</label><select id="cat"></select><div id="cfWrap"><button type="button" id="cfBtn" aria-haspopup="listbox" aria-expanded="false"></button><div id="cfList" role="listbox" hidden></div></div>
   <div class="row"><div><label>Minuti</label><input id="min" type="number" min="0"></div>
   <div><label>Porzioni</label><input id="serv" type="number" min="1"></div></div>
   <label>Ingredienti (uno per riga)</label><textarea id="ingr" rows="5"></textarea>
@@ -1722,9 +1735,20 @@ document.addEventListener('visibilitychange',()=>{
 
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
-/* iPhone: la rotella lancia 'change' a ogni spostamento, quindi non tolgo il focus alla scelta (chiuderebbe il selettore); lo perde al tocco successivo (anche sul menu stesso), così si riapre sempre */
-let catFt=0;$('cat').addEventListener('focus',()=>{catFt=Date.now()});
-document.addEventListener('pointerdown',()=>{const c=$('cat');/* niente blur se il selettore si è appena aperto (tocchi ravvicinati lo chiuderebbero) */if(matchMedia('(hover:none)').matches&&document.activeElement===c&&Date.now()-catFt>700)c.blur()},true);
+/* lista Categoria per telefono: si apre sempre con un tocco, scorre senza chiudersi, si chiude scegliendo o toccando fuori */
+(function(){
+  const sel=$('cat'),btn=$('cfBtn'),list=$('cfList');
+  function sync(){btn.textContent=sel.value||'';[...list.children].forEach(b=>b.setAttribute('aria-selected',String(b.dataset.v===sel.value)))}
+  function close(){list.hidden=true;btn.setAttribute('aria-expanded','false')}
+  function open(){list.hidden=false;btn.setAttribute('aria-expanded','true');const on=list.querySelector('[aria-selected="true"]');if(on)on.scrollIntoView({block:'nearest'});btn.scrollIntoView({block:'start',behavior:'smooth'})}
+  CATS.forEach(c=>{const b=el('button',{type:'button',textContent:c});b.dataset.v=c;b.setAttribute('role','option');b.onclick=()=>{sel.value=c;sel.dispatchEvent(new Event('change',{bubbles:true}));close()};list.append(b)});
+  const d=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value');
+  Object.defineProperty(sel,'value',{configurable:true,get(){return d.get.call(this)},set(v){d.set.call(this,v);sync();close()}});
+  btn.onclick=open;
+  document.addEventListener('pointerdown',e=>{if(!list.hidden&&!e.target.closest('#cfWrap'))close()},true);
+  $('dForm').addEventListener('close',close);
+  sync();
+})();
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
