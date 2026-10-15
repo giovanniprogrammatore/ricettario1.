@@ -615,6 +615,11 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
 /* Nuova ricetta: effetto di pressione leggero (solo trasformazione/opacità, niente filtro) e senza attesa prima dell'azione */
 #dForm button,#dForm .btn{will-change:transform,opacity}
 #dForm button.fbp:not(:disabled),#dForm .btn.fbp{transform:scale(.96);filter:none;opacity:.78}
+/* Nuova ricetta, touch: nessuna evidenziazione residua sulla categoria dopo la scelta */
+@media (hover:none){
+#cat,#cat:focus,#cat:focus-visible{outline:none;-webkit-tap-highlight-color:transparent}
+#cat:focus,#cat:focus-visible{border-color:var(--border)}
+}
 </style>
 </head>
 <body>
@@ -1717,6 +1722,8 @@ document.addEventListener('visibilitychange',()=>{
 
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
+/* iPhone: dopo la scelta la categoria perde subito il focus, così non resta evidenziata e si può riaprire subito */
+$('cat').addEventListener('change',()=>setTimeout(()=>{const c=$('cat');if(document.activeElement===c)c.blur()},60));
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
