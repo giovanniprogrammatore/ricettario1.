@@ -594,20 +594,6 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 #dView .vact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 #dView .vact .btn{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-width:0;padding:4px 10px 0;min-height:46px;line-height:1.1;white-space:normal;text-align:center}
 #dView .vact .btn:last-child:nth-child(odd){grid-column:1/-1}
-
-/* fix inquadratura scheda ricetta su cellulare */
-#dView .body h2{overflow-wrap:anywhere;word-break:break-word;hyphens:auto;font-size:clamp(1.6rem,8vw,2.3rem);padding-left:44px;padding-right:80px}
-#dView .body{overflow-x:hidden;max-height:92dvh}
-#dView{overflow:hidden}
-
-/* nuova ricetta e scheda ricetta a tutto schermo su cellulare */
-@media (max-width:600px){
-#dForm,#dView{position:fixed;inset:0;width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;margin:0;border:0;border-radius:0;overflow:hidden}
-#dForm .body,#dView .body{box-sizing:border-box;height:100%;max-height:none;overflow-y:auto;overflow-x:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
-#dView .hero,#dView .heroph{margin-top:calc(-20px - env(safe-area-inset-top,0px));height:calc(190px + env(safe-area-inset-top,0px))}
-#dForm .xwrap,#dView .xwrap{top:calc(12px + env(safe-area-inset-top,0px) - 20px)}
-#dForm::backdrop,#dView::backdrop{background:transparent}
-}
 </style>
 </head>
 <body>
@@ -1019,7 +1005,7 @@ function view(id){
   const acts=[fav,ed,del];
   if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=()=>{$('dView').close();openForm(id);$('photo').click()};acts.splice(1,0,ph)}
   b.append(el('div',{className:'actions vact'},acts));
-  $('dView').showModal();b.scrollTop=0;requestAnimationFrame(()=>{b.scrollTop=0});
+  b.scrollTop=0;$('dView').showModal();
 }
 
 let curP=null;
