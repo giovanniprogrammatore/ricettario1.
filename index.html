@@ -777,7 +777,7 @@ button{-webkit-tap-highlight-color:transparent}
   <p class="meta2"><b>Sincronizza tra dispositivi (senza servizi esterni):</b> premi «Salva file», invialo all'altro dispositivo (AirDrop, WhatsApp, email, cavo…) e lì premi «Carica file». Le ricette vengono <b>unite</b>: aggiunte, modifiche ed eliminazioni si propagano, e se una ricetta è cambiata in entrambi vince la versione più recente.</p>
   <div class="actions"><button class="btn" id="saveFile">Salva file</button><button class="btn sec" id="loadFile">Carica file</button></div>
   <input type="file" id="fileIn" hidden>
-  <p class="meta2">Oppure copia/incolla il testo (sostituisce tutte le ricette):</p>
+  <p class="meta2">Oppure copia/incolla il testo (le ricette vengono unite, come con «Carica file»):</p>
   <textarea id="bkText" rows="8"></textarea>
   <div class="actions"><button class="btn" id="copy">Copia</button><button class="btn sec" id="imp">Importa</button></div>
 </div></dialog>
@@ -786,7 +786,7 @@ button{-webkit-tap-highlight-color:transparent}
 const CATS=['Antipasti','Primi','Secondi','Contorni','Dolci','Cocktail','Salse','Marinature','Altro'];
 const EMO={Antipasti:'🧀',Primi:'🍝',Secondi:'🥩',Contorni:'🥗',Dolci:'🍰',Cocktail:'🍸',Salse:'🥫',Marinature:'🧄',Altro:'🍽️'};
 const KEY='ricettario-v1';
-let selId=null,recipes=[],cat=null,onlyFav=false,editId=null,photoData=null;
+let selId=null,recipes=[],cat=null,onlyFav=false,editId=null,photoData=null,photoDirty=false;
 const $=id=>document.getElementById(id);
 
 function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
@@ -800,8 +800,11 @@ function photoDb(){
     if(!('indexedDB' in window)){reject(new Error('IndexedDB non disponibile'));return}
     const req=indexedDB.open(PHOTO_DB,1);
     req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(PHOTO_STORE))req.result.createObjectStore(PHOTO_STORE)};
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Errore IndexedDB'));
+    req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>{db.close();photoDbPromise=null};db.onclose=()=>{photoDbPromise=null};resolve(db)};
+    req.onerror=()=>reject(req.error||new Error('Errore IndexedDB'));
+    req.onblocked=()=>reject(new Error('IndexedDB bloccato da un\'altra scheda'));
   });
+  photoDbPromise.catch(()=>{photoDbPromise=null}); // dopo un errore si può riprovare
   return photoDbPromise;
 }
 function photoGet(key){
@@ -815,6 +818,32 @@ function photoPut(data){
   const key=PHOTO_PREFIX+(Date.now().toString(36)+Math.random().toString(36).slice(2,10));
   return photoDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).put(data,key.slice(PHOTO_PREFIX.length));tx.oncomplete=()=>resolve(key);tx.onerror=()=>reject(tx.error||new Error('Spazio foto insufficiente'));tx.onabort=()=>reject(tx.error||new Error('Salvataggio foto annullato'))}));
 }
+function photoDel(key){
+  if(typeof key!=='string'||!key.startsWith(PHOTO_PREFIX))return Promise.resolve();
+  return photoDb().then(db=>new Promise(resolve=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).delete(key.slice(PHOTO_PREFIX.length));tx.oncomplete=tx.onerror=tx.onabort=()=>resolve()})).catch(()=>{});
+}
+function photoKeys(){
+  return photoDb().then(db=>new Promise((resolve,reject)=>{const req=db.transaction(PHOTO_STORE,'readonly').objectStore(PHOTO_STORE).getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)}));
+}
+/* elimina da IndexedDB le foto non più usate da ricette o cestino (ignora quelle create negli ultimi 10 minuti) */
+let gcTimer=null,gcBusy=false;
+function schedulePhotoGC(){clearTimeout(gcTimer);gcTimer=setTimeout(photoGC,1500)}
+async function photoGC(){
+  if(gcBusy)return;gcBusy=true;
+  try{
+    if(!recipes.length&&!trash.length)return; // per prudenza: se non c'è nulla in memoria non cancello niente
+    const used=new Set();
+    const add=r=>{if(r&&typeof r.photo==='string'&&r.photo.startsWith(PHOTO_PREFIX))used.add(r.photo.slice(PHOTO_PREFIX.length))};
+    recipes.forEach(add);trash.forEach(x=>add(x&&x.r));
+    const keys=await photoKeys(),now=Date.now();
+    for(const k of keys){
+      if(typeof k!=='string'||used.has(k))continue;
+      const t=parseInt(k.slice(0,8),36);
+      if(!isNaN(t)&&now-t<600000)continue;
+      await photoDel(PHOTO_PREFIX+k);
+    }
+  }catch(e){console.warn('Pulizia foto non riuscita',e)}finally{gcBusy=false}
+}
 function showPhoto(img,ref){photoGet(ref).then(src=>{if(src&&img.isConnected)img.src=src}).catch(()=>{});}
 async function storeRecipePhoto(r){
   if(!r||!r.photo)return r;
@@ -823,9 +852,13 @@ async function storeRecipePhoto(r){
 }
 async function migratePhotos(){
   let changed=false;
-  for(const r of recipes){if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);changed=true}catch(e){throw new Error('Non sono riuscito a trasferire una foto esistente in IndexedDB. Le vecchie ricette sono ancora presenti.')}}}
-  for(const item of trash){const r=item&&item.r;if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);changed=true}catch(e){throw new Error('Non sono riuscito a trasferire una foto del cestino in IndexedDB.')}}}
+  try{await migratePhotosRun(()=>{changed=true})}catch(e){if(changed){persist();saveTrash()}throw e}
   if(changed){if(!persist())throw new Error('Non è stato possibile salvare i riferimenti alle foto.');saveTrash()}
+}
+async function migratePhotosRun(mark){
+  let changed=false;
+  for(const r of recipes){if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);mark()}catch(e){throw new Error('Non sono riuscito a trasferire una foto esistente in IndexedDB. Le vecchie ricette sono ancora presenti.')}}}
+  for(const item of trash){const r=item&&item.r;if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);mark()}catch(e){throw new Error('Non sono riuscito a trasferire una foto del cestino in IndexedDB.')}}}
 }
 async function recipesForExport(list){
   const out=[];for(const item of list){const r={...item};if(r.photo&&typeof r.photo==='string'&&r.photo.startsWith(PHOTO_PREFIX))r.photo=await photoGet(r.photo);out.push(r)}return out;
@@ -834,7 +867,7 @@ const DKEY='ricettario-del';
 function loadDel(){try{const v=JSON.parse(localStorage.getItem(DKEY)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return {}}}
 let deleted=loadDel();
 function saveDel(){try{localStorage.setItem(DKEY,JSON.stringify(deleted))}catch(e){}}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(recipes));return true}catch(e){alert('Memoria piena: elimina qualche foto o fai un backup.');return false}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(recipes));return true}catch(e){alert('Memoria piena: fai un backup ed elimina qualche ricetta.');return false}}
 
 function el(tag,props={},kids=[]){const e=document.createElement(tag);Object.assign(e,props);kids.forEach(k=>e.append(k));return e}
 const lines=t=>t.split('\n').map(s=>s.trim()).filter(Boolean);
@@ -1039,7 +1072,7 @@ function renderTrash(){
     const rs=el('button',{type:'button',className:'btn',textContent:'Ripristina'});
     rs.onclick=()=>restoreTrash(x.r.id);
     const dl=el('button',{type:'button',className:'btn del',textContent:'Elimina'});
-    dl.onclick=async()=>{if(await ask('Eliminare per sempre "'+x.r.title+'"? Non si potrà recuperare.','Elimina per sempre')){trash=trash.filter(y=>y!==x);saveTrash();updTrashBadge();renderTrash()}};
+    dl.onclick=async()=>{if(await ask('Eliminare per sempre "'+x.r.title+'"? Non si potrà recuperare.','Elimina per sempre')){trash=trash.filter(y=>y!==x);saveTrash();updTrashBadge();renderTrash();schedulePhotoGC()}};
     box.append(el('div',{className:'trow'},[
       el('div',{className:'tt'},[el('b',{textContent:x.r.title}),el('small',{textContent:(x.r.cat||'')+' · ancora '+left+(left===1?' giorno':' giorni')})]),rs,dl]));
   });
@@ -1053,7 +1086,7 @@ $('trRestAll').onclick=()=>{
   saveDel();trash=[];saveTrash();
   if(persist()){render();updTrashBadge();renderTrash()}
 };
-$('trEmpty').onclick=async()=>{if(trash.length&&await ask('Eliminare per sempre '+(trash.length===1?'la ricetta nel cestino':'tutte le '+trash.length+' ricette nel cestino')+'? Non si potrà recuperarle.','Elimina tutto')){trash=[];saveTrash();updTrashBadge();renderTrash()}};
+$('trEmpty').onclick=async()=>{if(trash.length&&await ask('Eliminare per sempre '+(trash.length===1?'la ricetta nel cestino':'tutte le '+trash.length+' ricette nel cestino')+'? Non si potrà recuperarle.','Elimina tutto')){trash=[];saveTrash();updTrashBadge();renderTrash();schedulePhotoGC()}};
 
 function view(id){
   const r=recipes.find(x=>x.id===id);if(!r)return;
@@ -1113,7 +1146,7 @@ $('pGo').onclick=()=>{
 window.addEventListener('afterprint',()=>{$('printArea').textContent=''});
 const CAM='<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>';
 function syncPhoto(){const has=!!photoData;$('pv').hidden=!has;if(has)$('pv').src=photoData;$('drop').classList.toggle('has',has);$('dropTxt').innerHTML=I(CAM)+(has?'Cambia foto':'Aggiungi una foto');$('rmPhoto').hidden=!has}
-$('rmPhoto').onclick=()=>{photoData=null;$('photo').value='';syncPhoto()};
+$('rmPhoto').onclick=()=>{photoData=null;photoDirty=true;$('photo').value='';syncPhoto()};
 function safeUrl(u){u=(u||'').trim();if(!u)return '';try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:''}catch(e){return ''}}
 function findRecipeLD(o){
   if(!o||typeof o!=='object')return null;
@@ -1433,7 +1466,7 @@ async function openForm(id){
   $('min').value=r?r.min:30;$('serv').value=r?r.serv:4;
   $('ingr').value=r?r.ingr:'';$('steps').value=r?r.steps:'';
   $('src').value=r&&r.src||'';$('webText').value='';$('webBox').open=false;$('ocrMsg').textContent='Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.';
-  photoData=r&&r.photo?await photoGet(r.photo):null;$('photo').value='';
+  photoData=r&&r.photo?await photoGet(r.photo):null;photoDirty=false;$('photo').value='';
   syncPhoto();
   if(!r){const d=loadDraft();if(d){
     $('title').value=d.title||'';$('src').value=d.src||'';if(d.cat)$('cat').value=d.cat;
@@ -1451,20 +1484,25 @@ $('photo').onchange=e=>{
     const m=800,k=Math.min(1,m/Math.max(img.width,img.height));
     const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
     c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-    photoData=c.toDataURL('image/jpeg',0.75);syncPhoto();URL.revokeObjectURL(url)};
+    photoData=c.toDataURL('image/jpeg',0.75);photoDirty=true;syncPhoto();URL.revokeObjectURL(url)};
   img.onerror=()=>alert('Impossibile leggere questa foto.');img.src=url;
 };
 
 $('save').onclick=async()=>{
   const title=$('title').value.trim()||'Senza titolo',ingr=$('ingr').value.trim(),steps=$('steps').value.trim();
   const id=editId||(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-  let photoRef=null;
-  try{if(photoData)photoRef=await photoPut(photoData)}catch(e){alert('Non riesco a salvare la foto in IndexedDB. Controlla lo spazio disponibile e riprova.');return}
+  const old=editId?recipes.find(x=>x.id===editId):null;
+  let photoRef=null,newRef=null;
+  if(old&&!photoDirty)photoRef=old.photo||null; // foto invariata: tengo il riferimento esistente
+  else{try{if(photoData)photoRef=newRef=await photoPut(photoData)}catch(e){alert('Non riesco a salvare la foto in IndexedDB. Controlla lo spazio disponibile e riprova.');return}}
+  const snapshot=JSON.stringify(recipes);
+  const cur=editId?recipes.find(x=>x.id===editId):null;
   const data={title,cat:$('cat').value,min:parseInt($('min').value)||0,serv:parseInt($('serv').value)||1,ingr,steps,photo:photoRef,src:safeUrl($('src').value)};
   data.u=Date.now();
-  if(editId){Object.assign(recipes.find(x=>x.id===editId),data)}
+  if(cur){Object.assign(cur,data)}
   else recipes.push({id,fav:false,...data});
-  if(persist()){clearDraft();$('dForm').close();render()}
+  if(persist()){clearDraft();$('dForm').close();render();schedulePhotoGC()}
+  else{recipes=JSON.parse(snapshot);if(newRef)photoDel(newRef)} // salvataggio fallito: annullo anche la modifica in memoria
 };
 $('fClose').onclick=()=>$('dForm').close();
 $('cancel').onclick=()=>{clearDraft();$('dForm').close()};
@@ -1502,51 +1540,93 @@ $('q').addEventListener('change',rememberSearch);
 $('q').addEventListener('keydown',e=>{if(e.key==='Enter'){rememberSearch();$('hist').hidden=true;$('q').blur()}else if(e.key==='Escape')$('hist').hidden=true});
 document.addEventListener('click',e=>{if(e.target!==$('q')&&!$('hist').contains(e.target))$('hist').hidden=true});
 
-$('bkBtn').onclick=async()=>{try{$('bkText').value=JSON.stringify(await recipesForExport(recipes));updBk();$('dBk').showModal()}catch(e){alert('Non riesco a preparare il backup delle foto.')}};
+$('bkBtn').onclick=async()=>{try{$('bkText').value=JSON.stringify(await buildBackup());updBk();$('dBk').showModal()}catch(e){alert('Non riesco a preparare il backup delle foto.')}};
 $('bkX').onclick=()=>$('dBk').close();
 $('loadFile').onclick=()=>$('fileIn').click();
+/* ---------- import: validazione + merge (usato da «Carica file» e dal testo incollato) ---------- */
+function cleanRecipe(n){
+  if(!n||typeof n!=='object')return null;
+  const str=v=>typeof v==='string'?v:'';
+  const id=(typeof n.id==='string'||typeof n.id==='number')?String(n.id).trim():'';
+  const title=str(n.title).trim();
+  if(!id||!title)return null;
+  const u=Number(n.u);
+  return {id,title,
+    cat:CATS.includes(n.cat)?n.cat:'Altro',
+    min:Math.min(100000,Math.max(0,parseInt(n.min)||0)),
+    serv:Math.min(1000,Math.max(1,parseInt(n.serv)||1)),
+    ingr:str(n.ingr),steps:str(n.steps),
+    photo:/^data:image\/(jpeg|png|webp|gif);base64,/i.test(str(n.photo))?n.photo:null,
+    src:safeUrl(str(n.src)),
+    fav:!!n.fav,
+    u:isFinite(u)&&u>0?u:0};
+}
+function parseBackupText(txt){
+  txt=String(txt||'').replace(/^\uFEFF/,'').trim();
+  const i0=txt.search(/[\[{]/),i1=Math.max(txt.lastIndexOf(']'),txt.lastIndexOf('}'));
+  if(i0>0||(i1>=0&&i1<txt.length-1))txt=txt.slice(i0<0?0:i0,i1+1); // toglie testo/``` attorno al JSON
+  return JSON.parse(txt);
+}
+async function applyBackup(raw){
+  const list=Array.isArray(raw)?raw:raw&&raw.recipes;
+  if(!Array.isArray(list))throw new Error('formato');
+  const v=list.map(cleanRecipe).filter(Boolean);
+  const skipped=list.length-v.length;
+  const del={};
+  if(!Array.isArray(raw)&&raw.deleted&&typeof raw.deleted==='object'&&!Array.isArray(raw.deleted)){
+    Object.keys(raw.deleted).forEach(k=>{const t=Number(raw.deleted[k]);if(isFinite(t)&&t>0)del[k]=t})
+  }
+  const tr=[];
+  if(!Array.isArray(raw)&&Array.isArray(raw.trash)){
+    raw.trash.forEach(x=>{const r=x&&cleanRecipe(x.r),t=Number(x&&x.t);if(r&&isFinite(t)&&t>0&&Date.now()-t<TDAYS*DAY)tr.push({r,t})})
+  }
+  // le foto dei backup vengono trasferite in IndexedDB prima di toccare le ricette
+  for(const r of v)await storeRecipePhoto(r);
+  for(const x of tr)await storeRecipePhoto(x.r);
+  const snap=[JSON.stringify(recipes),JSON.stringify(deleted),JSON.stringify(trash)];
+  let add=0,upd=0,rem=0;
+  if(tr.length){trash=tr.concat(trash.filter(old=>!tr.some(n=>n.r.id===old.r.id)))}
+  // 1) cancellazioni dall'altro dispositivo
+  Object.keys(del).forEach(id=>{
+    const t=del[id];
+    if(t>(deleted[id]||0))deleted[id]=t;
+    const i=recipes.findIndex(x=>x.id===id);
+    if(i>=0&&(recipes[i].u||0)<=t){recipes.splice(i,1);rem++}
+  });
+  // 2) ricette nuove o aggiornate
+  v.forEach(n=>{
+    const t=deleted[n.id]||0;
+    if(t&&(n.u||0)<=t)return; // eliminata dopo l'ultima modifica
+    if(t){delete deleted[n.id]} // modificata dopo l'eliminazione: torna valida
+    const i=recipes.findIndex(x=>x.id===n.id);
+    trash=trash.filter(x=>x.r.id!==n.id);
+    if(i<0){recipes.push(n);add++}
+    else if((n.u||0)>(recipes[i].u||0)){recipes[i]=n;upd++}
+  });
+  saveDel();saveTrash();updTrashBadge();
+  if(!persist()){ // memoria piena: annullo tutto
+    recipes=JSON.parse(snap[0]);deleted=JSON.parse(snap[1]);trash=JSON.parse(snap[2]);
+    saveDel();saveTrash();updTrashBadge();render();
+    return null;
+  }
+  render();schedulePhotoGC();
+  return {add,upd,rem,skipped};
+}
+async function importBackupText(txt,badMsg){
+  let res;
+  try{res=await applyBackup(parseBackupText(txt))}catch(err){alert(badMsg);return false}
+  if(!res)return false;
+  alert('Fatto: '+res.add+' aggiunte, '+res.upd+' aggiornate, '+res.rem+' eliminate.'+(res.skipped?'\n'+res.skipped+(res.skipped===1?' ricetta non valida è stata ignorata.':' ricette non valide sono state ignorate.'):''));
+  return true;
+}
 $('fileIn').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{
-    let txt=(await f.text()).replace(/^\uFEFF/,'').trim();
-    const i0=txt.search(/[\[{]/),i1=Math.max(txt.lastIndexOf(']'),txt.lastIndexOf('}'));
-    if(i0>0||(i1>=0&&i1<txt.length-1))txt=txt.slice(i0<0?0:i0,i1+1); // toglie testo/``` attorno al JSON
-    const raw=JSON.parse(txt);
-    const v=Array.isArray(raw)?raw:raw&&raw.recipes;
-    if(!Array.isArray(v))throw 0;
-    const del=(!Array.isArray(raw)&&raw.deleted&&typeof raw.deleted==='object')?raw.deleted:{};
-    let add=0,upd=0,rem=0;
-    // Le foto contenute nei backup vengono trasferite in IndexedDB prima di salvare le ricette.
-    for(let j=0;j<v.length;j++){if(v[j]&&v[j].photo&&typeof v[j].photo==='string'&&v[j].photo.startsWith('data:'))await storeRecipePhoto(v[j]);}
-    if(!Array.isArray(raw)&&Array.isArray(raw.trash)){for(const x of raw.trash){if(x&&x.r)await storeRecipePhoto(x.r)}trash=raw.trash.concat(trash.filter(old=>!raw.trash.some(n=>n&&n.r&&n.r.id===old.r.id)));saveTrash()}
-    // 1) cancellazioni dall'altro dispositivo
-    Object.keys(del).forEach(id=>{
-      const t=Number(del[id])||0;
-      if(t>(deleted[id]||0))deleted[id]=t;
-      const i=recipes.findIndex(x=>x.id===id);
-      if(i>=0&&(recipes[i].u||0)<=t){recipes.splice(i,1);rem++}
-    });
-    // 2) ricette nuove o aggiornate
-    v.forEach(n=>{
-      if(!n||!n.id||!n.title)return;
-      const t=deleted[n.id]||0;
-      if(t&&(n.u||0)<=t)return; // eliminata dopo l'ultima modifica
-      if(t){delete deleted[n.id]} // modificata dopo l'eliminazione: torna valida
-      const i=recipes.findIndex(x=>x.id===n.id);
-      trash=trash.filter(x=>x.r.id!==n.id);
-      if(i<0){recipes.push(n);add++}
-      else if((n.u||0)>(recipes[i].u||0)){recipes[i]=n;upd++}
-    });
-    saveDel();saveTrash();updTrashBadge();
-    if(persist()){render();alert('Fatto: '+add+' aggiunte, '+upd+' aggiornate, '+rem+' eliminate.')}
-  }catch(err){alert('File non valido: scegli il file .json salvato con «Salva file» (o scaricato dal backup).')}
+  let txt;try{txt=await f.text()}catch(err){alert('Non riesco a leggere il file.');return}
+  await importBackupText(txt,'File non valido: scegli il file .json salvato con «Salva file» (o scaricato dal backup).');
 };
 $('copy').onclick=async()=>{const t=$('bkText');t.select();try{await navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}alert('Copiato!')};
 $('imp').onclick=async()=>{
-  try{const v=JSON.parse($('bkText').value);if(!Array.isArray(v))throw 0;
-    if(!confirm('Importare '+v.length+' ricette? Quelle attuali verranno sostituite.'))return;
-    for(const r of v)await storeRecipePhoto(r);recipes=v;if(persist()){$('dBk').close();render()}}
-  catch(e){alert('Testo di backup non valido.')}
+  if(await importBackupText($('bkText').value,'Testo di backup non valido.'))$('dBk').close();
 };
 
 /* ---------- promemoria backup ---------- */
@@ -1578,11 +1658,14 @@ function bkIntro(){
   $('bkBan').hidden=false;
   clearTimeout(bkTimer);bkTimer=setTimeout(bkHide,9000);
 }
-async function saveBackup(){
-  const name='ricettario-'+new Date().toISOString().slice(0,10)+'.json';
+async function buildBackup(){
   const exportRecipes=await recipesForExport(recipes);
   const exportTrash=[];for(const x of trash){const item={...x,r:{...x.r}};if(item.r.photo&&typeof item.r.photo==='string'&&item.r.photo.startsWith(PHOTO_PREFIX))item.r.photo=await photoGet(item.r.photo);exportTrash.push(item)}
-  const file=new File([JSON.stringify({v:2,recipes:exportRecipes,deleted,trash:exportTrash})],name,{type:'application/json'});
+  return {v:2,recipes:exportRecipes,deleted,trash:exportTrash};
+}
+async function saveBackup(){
+  const name='ricettario-'+new Date().toISOString().slice(0,10)+'.json';
+  const file=new File([JSON.stringify(await buildBackup())],name,{type:'application/json'});
   try{
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'il Ricettario per GIOIRE'});markBk();toast('Backup salvato ✓');return true}
   }catch(e){if(e&&e.name==='AbortError')return false}
@@ -1785,8 +1868,17 @@ document.addEventListener('visibilitychange',()=>{
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
 recipes=load();render();saveTrash();updTrashBadge();
-migratePhotos().then(()=>{render();updTrashBadge()}).catch(err=>{console.error(err);alert('Attenzione: '+err.message+' Fai subito un backup dal menu Backup prima di continuare.')});
-try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+migratePhotos().then(()=>{render();updTrashBadge();schedulePhotoGC()}).catch(err=>{console.error(err);alert('Attenzione: '+err.message+' Fai subito un backup dal menu Backup prima di continuare.')});
+/* altra scheda/finestra ha salvato: ricarico i dati per non sovrascriverli al prossimo salvataggio */
+window.addEventListener('storage',e=>{
+  if(e.storageArea!==window.localStorage)return;
+  if(e.key!==null&&e.key!==KEY&&e.key!==TKEY&&e.key!==DKEY)return;
+  recipes=load();deleted=loadDel();trash=loadTrash();
+  render();updTrashBadge();
+  if($('dTrash').open)renderTrash();
+  toast('Ricette aggiornate da un\'altra scheda');
+});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().then(ok=>{if(!ok)console.info('Archiviazione persistente non concessa: fai backup regolari.')})}catch(e){}
 
 /* conferma al tocco: vibrazione per tutti i pulsanti; avvio timer: vibrazione doppia */
 function fbTick(strong){
