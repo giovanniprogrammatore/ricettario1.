@@ -600,6 +600,13 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 #dForm[open],#dHelp[open],#dProp[open],#dView[open],#dPrint[open],#dTrash[open],#dBk[open]{display:flex;flex-direction:column}
 #dForm .body,#dHelp .body,#dProp .body,#dView .body,#dPrint .body,#dTrash .body,#dBk .body{flex:1 1 auto;height:auto;min-height:0;max-height:none;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
 }
+/* bordatura come nella home, sulle finestre a schermo intero (telefono) */
+@media screen and (max-width:600px){
+#dForm::before,#dHelp::before,#dProp::before,#dView::before,#dPrint::before,#dTrash::before,#dBk::before,
+#dForm::after,#dHelp::after,#dProp::after,#dView::after,#dPrint::after,#dTrash::after,#dBk::after{content:"";position:absolute;pointer-events:none;z-index:10}
+#dForm::after,#dHelp::after,#dProp::after,#dView::after,#dPrint::after,#dTrash::after,#dBk::after{inset:calc(4px + env(safe-area-inset-top,0px)) 4px calc(4px + env(safe-area-inset-bottom,0px)) 4px;border:1.5px solid var(--accent);border-radius:14px}
+#dForm::before,#dHelp::before,#dProp::before,#dView::before,#dPrint::before,#dTrash::before,#dBk::before{inset:calc(7px + env(safe-area-inset-top,0px)) 7px calc(7px + env(safe-area-inset-bottom,0px)) 7px;border:1px solid var(--border);border-radius:11px}
+}
 </style>
 </head>
 <body>
