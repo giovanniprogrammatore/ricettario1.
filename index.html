@@ -790,6 +790,46 @@ let selId=null,recipes=[],cat=null,onlyFav=false,editId=null,photoData=null;
 const $=id=>document.getElementById(id);
 
 function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+
+// Foto in IndexedDB: localStorage conserva solo un riferimento leggero.
+const PHOTO_DB='gioire-foto-db',PHOTO_STORE='photos',PHOTO_PREFIX='idb:';
+let photoDbPromise=null;
+function photoDb(){
+  if(photoDbPromise)return photoDbPromise;
+  photoDbPromise=new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){reject(new Error('IndexedDB non disponibile'));return}
+    const req=indexedDB.open(PHOTO_DB,1);
+    req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(PHOTO_STORE))req.result.createObjectStore(PHOTO_STORE)};
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Errore IndexedDB'));
+  });
+  return photoDbPromise;
+}
+function photoGet(key){
+  if(!key)return Promise.resolve(null);
+  if(typeof key==='string'&&key.startsWith('data:'))return Promise.resolve(key);
+  if(typeof key!=='string'||!key.startsWith(PHOTO_PREFIX))return Promise.resolve(null);
+  return photoDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readonly'),req=tx.objectStore(PHOTO_STORE).get(key.slice(PHOTO_PREFIX.length));req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)}));
+}
+function photoPut(data){
+  if(!data||typeof data!=='string'||!data.startsWith('data:'))return Promise.resolve(null);
+  const key=PHOTO_PREFIX+(Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+  return photoDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).put(data,key.slice(PHOTO_PREFIX.length));tx.oncomplete=()=>resolve(key);tx.onerror=()=>reject(tx.error||new Error('Spazio foto insufficiente'));tx.onabort=()=>reject(tx.error||new Error('Salvataggio foto annullato'))}));
+}
+function showPhoto(img,ref){photoGet(ref).then(src=>{if(src&&img.isConnected)img.src=src}).catch(()=>{});}
+async function storeRecipePhoto(r){
+  if(!r||!r.photo)return r;
+  if(typeof r.photo==='string'&&r.photo.startsWith('data:'))r.photo=await photoPut(r.photo);
+  return r;
+}
+async function migratePhotos(){
+  let changed=false;
+  for(const r of recipes){if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);changed=true}catch(e){throw new Error('Non sono riuscito a trasferire una foto esistente in IndexedDB. Le vecchie ricette sono ancora presenti.')}}}
+  for(const item of trash){const r=item&&item.r;if(r&&r.photo&&typeof r.photo==='string'&&r.photo.startsWith('data:')){try{await storeRecipePhoto(r);changed=true}catch(e){throw new Error('Non sono riuscito a trasferire una foto del cestino in IndexedDB.')}}}
+  if(changed){if(!persist())throw new Error('Non è stato possibile salvare i riferimenti alle foto.');saveTrash()}
+}
+async function recipesForExport(list){
+  const out=[];for(const item of list){const r={...item};if(r.photo&&typeof r.photo==='string'&&r.photo.startsWith(PHOTO_PREFIX))r.photo=await photoGet(r.photo);out.push(r)}return out;
+}
 const DKEY='ricettario-del';
 function loadDel(){try{const v=JSON.parse(localStorage.getItem(DKEY)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return {}}}
 let deleted=loadDel();
@@ -868,7 +908,7 @@ function render(){
     list.append(e);return}
   items.forEach(r=>{
     const pic=el('div',{className:'pic tile'});
-    if(r.photo)pic.append(el('img',{src:r.photo,alt:'',loading:'lazy'}));else pic.append(el('span',{className:'ph',innerHTML:HAT}));
+    if(r.photo){const im=el('img',{alt:'',loading:'lazy'});pic.append(im);showPhoto(im,r.photo)}else pic.append(el('span',{className:'ph',innerHTML:HAT}));
     pic.append(el('span',{className:'tag',textContent:r.cat}));
     const hb=el('span',{className:'heart'+(r.fav?'':' off'),innerHTML:I(HEART,!!r.fav),role:'button',tabIndex:0,title:r.fav?'Rimuovi dai preferiti':'Aggiungi ai preferiti'});
     hb.setAttribute('aria-label',hb.title);hb.setAttribute('aria-pressed',String(!!r.fav));
@@ -1025,7 +1065,7 @@ function view(id){
   const cb=el('button',{type:'button',className:'icon xbtn ckbtn',title:'Modalità cucina',innerHTML:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 13.5A3.5 3.5 0 0 1 7.3 6.6a4 4 0 0 1 7.4-1.2 3.8 3.8 0 0 1 2.3 8.1V19H7zM7 16.5h10"/></svg>'});
   cb.setAttribute('aria-label','Modalità cucina');cb.onclick=()=>openCook(id);
   b.append(el('div',{className:'xwrap'},[cb,xb,pb]));
-  if(r.photo)b.append(el('img',{className:'hero',src:r.photo,alt:''}));
+  if(r.photo){const im=el('img',{className:'hero',alt:''});b.append(im);showPhoto(im,r.photo)}
   else b.append(el('div',{className:'heroph tile',innerHTML:badgeSvg()}));
   const ul=el('ul',{className:'ing'},lines(r.ingr).map(t=>el('li',{textContent:t})));
   const ol=el('ol',{className:'st'},lines(r.steps).map(t=>el('li',{textContent:t.replace(/^\d+[.)]\s*/,'')})));
@@ -1041,7 +1081,7 @@ function view(id){
   const del=el('button',{className:'btn del',textContent:'Elimina'});
   del.onclick=()=>{if(askDel(id))$('dView').close()};
   const acts=[fav,ed,del];
-  if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=()=>{$('dView').close();openForm(id);$('photo').click()};acts.splice(1,0,ph)}
+  if(!r.photo){const ph=el('button',{className:'btn sec',textContent:'Foto',title:'Aggiungi foto'});ph.setAttribute('aria-label','Aggiungi foto');ph.onclick=async()=>{$('dView').close();await openForm(id);$('photo').click()};acts.splice(1,0,ph)}
   b.append(el('div',{className:'actions vact'},acts));
   b.scrollTop=0;$('dView').showModal();
 }
@@ -1386,14 +1426,14 @@ function saveDraft(){
   try{if(empty)localStorage.removeItem(DRAFT);else localStorage.setItem(DRAFT,JSON.stringify(d))}catch(e){}
 }
 ['title','src','cat','min','serv','ingr','steps','webText'].forEach(id=>{$(id).addEventListener('input',saveDraft);$(id).addEventListener('change',saveDraft)});
-function openForm(id){
+async function openForm(id){
   editId=id||null;const r=id?recipes.find(x=>x.id===id):null;
   $('fTitle').textContent=r?'Modifica ricetta':'Nuova ricetta';
   $('title').value=r?r.title:'';$('cat').value=r?r.cat:CATS[0];
   $('min').value=r?r.min:30;$('serv').value=r?r.serv:4;
   $('ingr').value=r?r.ingr:'';$('steps').value=r?r.steps:'';
   $('src').value=r&&r.src||'';$('webText').value='';$('webBox').open=false;$('ocrMsg').textContent='Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.';
-  photoData=r?r.photo||null:null;$('photo').value='';
+  photoData=r&&r.photo?await photoGet(r.photo):null;$('photo').value='';
   syncPhoto();
   if(!r){const d=loadDraft();if(d){
     $('title').value=d.title||'';$('src').value=d.src||'';if(d.cat)$('cat').value=d.cat;
@@ -1415,12 +1455,15 @@ $('photo').onchange=e=>{
   img.onerror=()=>alert('Impossibile leggere questa foto.');img.src=url;
 };
 
-$('save').onclick=()=>{
+$('save').onclick=async()=>{
   const title=$('title').value.trim()||'Senza titolo',ingr=$('ingr').value.trim(),steps=$('steps').value.trim();
-  const data={title,cat:$('cat').value,min:parseInt($('min').value)||0,serv:parseInt($('serv').value)||1,ingr,steps,photo:photoData,src:safeUrl($('src').value)};
+  const id=editId||(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  let photoRef=null;
+  try{if(photoData)photoRef=await photoPut(photoData)}catch(e){alert('Non riesco a salvare la foto in IndexedDB. Controlla lo spazio disponibile e riprova.');return}
+  const data={title,cat:$('cat').value,min:parseInt($('min').value)||0,serv:parseInt($('serv').value)||1,ingr,steps,photo:photoRef,src:safeUrl($('src').value)};
   data.u=Date.now();
   if(editId){Object.assign(recipes.find(x=>x.id===editId),data)}
-  else recipes.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),fav:false,...data});
+  else recipes.push({id,fav:false,...data});
   if(persist()){clearDraft();$('dForm').close();render()}
 };
 $('fClose').onclick=()=>$('dForm').close();
@@ -1459,7 +1502,7 @@ $('q').addEventListener('change',rememberSearch);
 $('q').addEventListener('keydown',e=>{if(e.key==='Enter'){rememberSearch();$('hist').hidden=true;$('q').blur()}else if(e.key==='Escape')$('hist').hidden=true});
 document.addEventListener('click',e=>{if(e.target!==$('q')&&!$('hist').contains(e.target))$('hist').hidden=true});
 
-$('bkBtn').onclick=()=>{$('bkText').value=JSON.stringify(recipes);updBk();$('dBk').showModal()};
+$('bkBtn').onclick=async()=>{try{$('bkText').value=JSON.stringify(await recipesForExport(recipes));updBk();$('dBk').showModal()}catch(e){alert('Non riesco a preparare il backup delle foto.')}};
 $('bkX').onclick=()=>$('dBk').close();
 $('loadFile').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=async e=>{
@@ -1473,6 +1516,9 @@ $('fileIn').onchange=async e=>{
     if(!Array.isArray(v))throw 0;
     const del=(!Array.isArray(raw)&&raw.deleted&&typeof raw.deleted==='object')?raw.deleted:{};
     let add=0,upd=0,rem=0;
+    // Le foto contenute nei backup vengono trasferite in IndexedDB prima di salvare le ricette.
+    for(let j=0;j<v.length;j++){if(v[j]&&v[j].photo&&typeof v[j].photo==='string'&&v[j].photo.startsWith('data:'))await storeRecipePhoto(v[j]);}
+    if(!Array.isArray(raw)&&Array.isArray(raw.trash)){for(const x of raw.trash){if(x&&x.r)await storeRecipePhoto(x.r)}trash=raw.trash.concat(trash.filter(old=>!raw.trash.some(n=>n&&n.r&&n.r.id===old.r.id)));saveTrash()}
     // 1) cancellazioni dall'altro dispositivo
     Object.keys(del).forEach(id=>{
       const t=Number(del[id])||0;
@@ -1496,10 +1542,10 @@ $('fileIn').onchange=async e=>{
   }catch(err){alert('File non valido: scegli il file .json salvato con «Salva file» (o scaricato dal backup).')}
 };
 $('copy').onclick=async()=>{const t=$('bkText');t.select();try{await navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}alert('Copiato!')};
-$('imp').onclick=()=>{
+$('imp').onclick=async()=>{
   try{const v=JSON.parse($('bkText').value);if(!Array.isArray(v))throw 0;
     if(!confirm('Importare '+v.length+' ricette? Quelle attuali verranno sostituite.'))return;
-    recipes=v;if(persist()){$('dBk').close();render()}}
+    for(const r of v)await storeRecipePhoto(r);recipes=v;if(persist()){$('dBk').close();render()}}
   catch(e){alert('Testo di backup non valido.')}
 };
 
@@ -1534,7 +1580,9 @@ function bkIntro(){
 }
 async function saveBackup(){
   const name='ricettario-'+new Date().toISOString().slice(0,10)+'.json';
-  const file=new File([JSON.stringify({v:2,recipes,deleted})],name,{type:'application/json'});
+  const exportRecipes=await recipesForExport(recipes);
+  const exportTrash=[];for(const x of trash){const item={...x,r:{...x.r}};if(item.r.photo&&typeof item.r.photo==='string'&&item.r.photo.startsWith(PHOTO_PREFIX))item.r.photo=await photoGet(item.r.photo);exportTrash.push(item)}
+  const file=new File([JSON.stringify({v:2,recipes:exportRecipes,deleted,trash:exportTrash})],name,{type:'application/json'});
   try{
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'il Ricettario per GIOIRE'});markBk();toast('Backup salvato ✓');return true}
   }catch(e){if(e&&e.name==='AbortError')return false}
@@ -1737,6 +1785,7 @@ document.addEventListener('visibilitychange',()=>{
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
 recipes=load();render();saveTrash();updTrashBadge();
+migratePhotos().then(()=>{render();updTrashBadge()}).catch(err=>{console.error(err);alert('Attenzione: '+err.message+' Fai subito un backup dal menu Backup prima di continuare.')});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
 /* conferma al tocco: vibrazione per tutti i pulsanti; avvio timer: vibrazione doppia */
