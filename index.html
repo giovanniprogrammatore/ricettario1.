@@ -612,6 +612,9 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 /* nasconde tutte le barre di scorrimento (lo scorrimento resta attivo) */
 html,body,*{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
+/* niente bordatura arancione sui pulsanti (anello di focus) */
+button:focus,button:focus-visible,.btn:focus,.btn:focus-visible,.icon:focus,.icon:focus-visible,.chip:focus,.chip:focus-visible,[role=button]:focus,[role=button]:focus-visible,.fab:focus,.fab:focus-visible{outline:none!important}
+button{-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
