@@ -599,6 +599,15 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 #dView .body h2{overflow-wrap:anywhere;word-break:break-word;hyphens:auto;font-size:clamp(1.6rem,8vw,2.3rem);padding-left:44px;padding-right:80px}
 #dView .body{overflow-x:hidden;max-height:92dvh}
 #dView{overflow:hidden}
+
+/* nuova ricetta e scheda ricetta a tutto schermo su cellulare */
+@media (max-width:600px){
+#dForm,#dView{position:fixed;inset:0;width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;margin:0;border:0;border-radius:0;overflow:hidden}
+#dForm .body,#dView .body{box-sizing:border-box;height:100%;max-height:none;overflow-y:auto;overflow-x:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+#dView .hero,#dView .heroph{margin-top:calc(-20px - env(safe-area-inset-top,0px));height:calc(190px + env(safe-area-inset-top,0px))}
+#dForm .xwrap,#dView .xwrap{top:calc(12px + env(safe-area-inset-top,0px) - 20px)}
+#dForm::backdrop,#dView::backdrop{background:transparent}
+}
 </style>
 </head>
 <body>
