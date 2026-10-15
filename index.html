@@ -672,7 +672,7 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
   <div class="pick"><input type="file" id="photo" accept="image/*" hidden><label class="drop" for="photo" id="drop"><img id="pv" hidden alt=""><span id="dropTxt"></span></label><button type="button" class="btn sec" id="rmPhoto" hidden>Rimuovi foto</button></div>
   <label>Titolo</label><input id="title">
   <label>Link della fonte (facoltativo)</label><input id="src" type="url" inputmode="url" placeholder="https://…">
-  <label>Categoria</label><select id="cat"></select>
+  <label for="cat">Categoria</label><select id="cat"></select>
   <div class="row"><div><label>Minuti</label><input id="min" type="number" min="0"></div>
   <div><label>Porzioni</label><input id="serv" type="number" min="1"></div></div>
   <label>Ingredienti (uno per riga)</label><textarea id="ingr" rows="5"></textarea>
@@ -1126,7 +1126,7 @@ const runWeb=fromOcr=>{
   if(r.steps)$('steps').value=r.steps;
   if(r.min)$('min').value=r.min;
   if(r.serv)$('serv').value=r.serv;
-  if(r.cat)$('cat').value=r.cat;
+  if(CATS.includes(r.cat))$('cat').value=r.cat;
   saveDraft();
   if(fromOcr){if(!r.ok)$('ocrMsg').textContent='Ho letto il testo ma non trovo «Ingredienti» e «Procedimento»: ho messo tutto nel procedimento, sposta a mano gli ingredienti.';return}
   $('webBox').open=false;
@@ -1377,14 +1377,14 @@ function saveDraft(){
 function openForm(id){
   editId=id||null;const r=id?recipes.find(x=>x.id===id):null;
   $('fTitle').textContent=r?'Modifica ricetta':'Nuova ricetta';
-  $('title').value=r?r.title:'';$('cat').value=r?r.cat:CATS[0];
+  $('title').value=r?r.title:'';$('cat').value=r?(CATS.includes(r.cat)?r.cat:'Altro'):CATS[0];
   $('min').value=r?r.min:30;$('serv').value=r?r.serv:4;
   $('ingr').value=r?r.ingr:'';$('steps').value=r?r.steps:'';
   $('src').value=r&&r.src||'';$('webText').value='';$('webBox').open=false;$('ocrMsg').textContent='Vuoi aggiungere una ricetta da un link o da una foto? Mandala a Claude e poi carica il file che ti restituisce.';
   photoData=r?r.photo||null:null;$('photo').value='';
   syncPhoto();
   if(!r){const d=loadDraft();if(d){
-    $('title').value=d.title||'';$('src').value=d.src||'';if(d.cat)$('cat').value=d.cat;
+    $('title').value=d.title||'';$('src').value=d.src||'';if(CATS.includes(d.cat))$('cat').value=d.cat;
     if(d.min!=='')$('min').value=d.min;if(d.serv!=='')$('serv').value=d.serv;
     $('ingr').value=d.ingr||'';$('steps').value=d.steps||'';$('webText').value=d.web||'';
     $('fTitle').textContent='Nuova ricetta (bozza ripristinata)';
@@ -1722,8 +1722,8 @@ document.addEventListener('visibilitychange',()=>{
 
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
-/* iPhone: dopo la scelta la categoria perde subito il focus, così non resta evidenziata e si può riaprire subito */
-$('cat').addEventListener('change',()=>setTimeout(()=>{const c=$('cat');if(document.activeElement===c)c.blur()},60));
+/* iPhone: la rotella lancia 'change' a ogni spostamento, quindi non tolgo il focus alla scelta (chiuderebbe il selettore); lo perde da solo al tocco fuori */
+document.addEventListener('pointerdown',e=>{const c=$('cat');if(document.activeElement===c&&e.target!==c)c.blur()},true);
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
