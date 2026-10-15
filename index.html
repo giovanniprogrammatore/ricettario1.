@@ -1744,34 +1744,25 @@ function fbTick(strong){
   try{if(navigator.vibrate)navigator.vibrate(strong?[25,40,25]:12)}catch(e){}
 }
 /* effetto di pressione gestito a mano (non con :active, che sui telefoni resta "appiccicato"):
-   si accende al tocco e si spegne al rilascio, sempre prima del click e quindi del cambio di sezione */
-let fbEl=null,fbDone=null,fbRe=false;
+   si accende al tocco e si spegne al rilascio; il click parte subito, senza ritardi */
+let fbEl=null;
 function fbClear(){if(fbEl){fbEl.classList.remove('fbp');fbEl=null}}
 document.addEventListener('pointerdown',e=>{
-  fbClear();fbDone=null;
+  fbClear();
   const b=e.target.closest&&e.target.closest('button,.btn,[role="button"]');
   if(b&&!b.disabled){fbEl=b;b.classList.add('fbp')}
 },true);
-/* al rilascio il pulsante torna subito normale; ricordo quale era per ritardare l'azione (vedi sotto) */
-document.addEventListener('pointerup',()=>{fbDone=fbEl;fbClear()},true);
-['pointercancel','dragstart','contextmenu','scroll'].forEach(n=>document.addEventListener(n,()=>{fbDone=null;fbClear()},true));
+document.addEventListener('pointerup',fbClear,true);
+['pointercancel','dragstart','contextmenu','scroll'].forEach(n=>document.addEventListener(n,fbClear,true));
 window.addEventListener('blur',fbClear);
 window.addEventListener('pagehide',fbClear);
 document.addEventListener('visibilitychange',()=>{fbClear();if(!document.hidden&&ck.timers.length)ckTick()});
-/* l'azione del pulsante parte solo dopo che il colore normale è stato davvero disegnato a schermo
-   (due frame): il click originale viene fermato e rilanciato subito dopo */
+/* vibrazione leggera a ogni pulsante (tranne quelli che chiamano ckStart, che dà il segnale forte) */
 document.addEventListener('click',e=>{
-  if(fbRe)return;
-  const was=fbDone;fbDone=null;fbClear();
-  if(e.defaultPrevented)return; /* click già annullato (es. dopo pressione prolungata): non va rilanciato */
+  if(e.defaultPrevented)return; /* click già annullato (es. dopo pressione prolungata) */
   const b=e.target.closest&&e.target.closest('button,.btn,[role="button"]');
   if(!b||b.disabled)return;
-  if(!(b.id==='ckGo'||b.classList.contains('ckchip')))fbTick(false); /* questi chiamano ckStart, che dà il segnale forte */
-  if(was!==b)return; /* tastiera o tocco non da puntatore: nessun ritardo */
-  e.preventDefault();e.stopImmediatePropagation();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    fbRe=true;try{b.click()}finally{fbRe=false}
-  }));
+  if(!(b.id==='ckGo'||b.classList.contains('ckchip')))fbTick(false);
 },true);
 
 const sp=$('splash');let seen=false;
