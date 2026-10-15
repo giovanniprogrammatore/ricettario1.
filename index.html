@@ -1723,7 +1723,8 @@ document.addEventListener('visibilitychange',()=>{
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
 /* iPhone: la rotella lancia 'change' a ogni spostamento, quindi non tolgo il focus alla scelta (chiuderebbe il selettore); lo perde al tocco successivo (anche sul menu stesso), così si riapre sempre */
-document.addEventListener('pointerdown',()=>{const c=$('cat');if(matchMedia('(hover:none)').matches&&document.activeElement===c)c.blur()},true);
+let catFt=0;$('cat').addEventListener('focus',()=>{catFt=Date.now()});
+document.addEventListener('pointerdown',()=>{const c=$('cat');/* niente blur se il selettore si è appena aperto (tocchi ravvicinati lo chiuderebbero) */if(matchMedia('(hover:none)').matches&&document.activeElement===c&&Date.now()-catFt>700)c.blur()},true);
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
