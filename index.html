@@ -1399,8 +1399,7 @@ $('photo').onchange=e=>{
 };
 
 $('save').onclick=()=>{
-  const title=$('title').value.trim(),ingr=$('ingr').value.trim(),steps=$('steps').value.trim();
-  if(!title||!ingr||!steps){alert('Titolo, ingredienti e procedimento sono obbligatori.');return}
+  const title=$('title').value.trim()||'Senza titolo',ingr=$('ingr').value.trim(),steps=$('steps').value.trim();
   const data={title,cat:$('cat').value,min:parseInt($('min').value)||0,serv:parseInt($('serv').value)||1,ingr,steps,photo:photoData,src:safeUrl($('src').value)};
   data.u=Date.now();
   if(editId){Object.assign(recipes.find(x=>x.id===editId),data)}
