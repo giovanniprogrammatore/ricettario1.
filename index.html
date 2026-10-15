@@ -1722,8 +1722,8 @@ document.addEventListener('visibilitychange',()=>{
 
 
 CATS.forEach(c=>$('cat').append(el('option',{value:c,textContent:c})));
-/* iPhone: la rotella lancia 'change' a ogni spostamento, quindi non tolgo il focus alla scelta (chiuderebbe il selettore); lo perde da solo al tocco fuori */
-document.addEventListener('pointerdown',e=>{const c=$('cat');if(document.activeElement===c&&e.target!==c)c.blur()},true);
+/* iPhone: la rotella lancia 'change' a ogni spostamento, quindi non tolgo il focus alla scelta (chiuderebbe il selettore); lo perde al tocco successivo (anche sul menu stesso), così si riapre sempre */
+document.addEventListener('pointerdown',()=>{const c=$('cat');if(matchMedia('(hover:none)').matches&&document.activeElement===c)c.blur()},true);
 recipes=load();render();saveTrash();updTrashBadge();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
