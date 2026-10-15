@@ -594,11 +594,13 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 #dView .vact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 #dView .vact .btn{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-width:0;padding:4px 10px 0;min-height:46px;line-height:1.1;white-space:normal;text-align:center}
 #dView .vact .btn:last-child:nth-child(odd){grid-column:1/-1}
-/* finestre a schermo intero su telefono (tranne conferma #dAsk e cucina #dCook, già a posto) */
+/* finestre a schermo intero su telefono (tranne conferma #dAsk e cucina #dCook, già a posto)
+   il contenuto scorre dentro la cornice: lo spazio fuori dalla bordatura è padding del dialog e resta vuoto */
 @media (max-width:600px){
-#dForm,#dHelp,#dProp,#dView,#dPrint,#dTrash,#dBk{width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;margin:0;border:0;border-radius:0;overflow:hidden}
+#dForm,#dHelp,#dProp,#dView,#dPrint,#dTrash,#dBk{width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;margin:0;border:0;border-radius:0;overflow:hidden;padding:calc(11px + env(safe-area-inset-top,0px)) calc(11px + env(safe-area-inset-right,0px)) calc(11px + env(safe-area-inset-bottom,0px)) calc(11px + env(safe-area-inset-left,0px))}
 #dForm[open],#dHelp[open],#dProp[open],#dView[open],#dPrint[open],#dTrash[open],#dBk[open]{display:flex;flex-direction:column}
-#dForm .body,#dHelp .body,#dProp .body,#dView .body,#dPrint .body,#dTrash .body,#dBk .body{flex:1 1 auto;height:auto;min-height:0;max-height:none;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-left:calc(20px + env(safe-area-inset-left,0px));padding-right:calc(20px + env(safe-area-inset-right,0px))}
+#dForm .body,#dHelp .body,#dProp .body,#dView .body,#dPrint .body,#dTrash .body,#dBk .body{flex:1 1 auto;height:auto;min-height:0;max-height:none;padding:20px;border-radius:8px;outline:none}
+#dForm .xwrap,#dBk .xwrap{top:16px}
 }
 /* bordatura come nella home, sulle finestre a schermo intero (telefono) */
 @media screen and (max-width:600px){
