@@ -612,6 +612,9 @@ button.fbp:not(:disabled),.btn.fbp{transform:scale(.93);filter:brightness(.88)}
 /* nasconde tutte le barre di scorrimento (lo scorrimento resta attivo) */
 html,body,*{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
+/* Nuova ricetta: effetto di pressione leggero (solo trasformazione/opacità, niente filtro) e senza attesa prima dell'azione */
+#dForm button,#dForm .btn{will-change:transform,opacity}
+#dForm button.fbp:not(:disabled),#dForm .btn.fbp{transform:scale(.96);filter:none;opacity:.78}
 </style>
 </head>
 <body>
@@ -1745,7 +1748,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest&&e.target.closest('button,.btn,[role="button"]');
   if(!b||b.disabled)return;
   if(!(b.id==='ckGo'||b.classList.contains('ckchip')))fbTick(false); /* questi chiamano ckStart, che dà il segnale forte */
-  if(was!==b)return; /* tastiera o tocco non da puntatore: nessun ritardo */
+  if(was!==b||b.closest('#dForm'))return; /* tastiera o tocco non da puntatore, oppure form Nuova ricetta: nessun ritardo */
   e.preventDefault();e.stopImmediatePropagation();
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     fbRe=true;try{b.click()}finally{fbRe=false}
