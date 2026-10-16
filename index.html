@@ -536,7 +536,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-righ
 .cktm.ring{background:#b3261e;color:#fff;animation:ckring .6s ease-in-out infinite alternate}
 @keyframes ckring{to{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.cktm.ring{animation:none}}
-#dCook .ckset{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 12px;border-top:1px double var(--border);max-height:62dvh;overflow-y:auto}
+#dCook .ckset{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;margin:8px 12px;border:2px solid var(--accent);border-radius:20px;background:var(--card);max-height:62dvh;overflow-y:auto}
 #dCook .ckset[hidden]{display:none}
 .ckdial{width:min(60vw,236px,30dvh);height:auto;flex:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .ckdial .face{fill:var(--card);stroke:var(--accent);stroke-width:3}
@@ -1630,7 +1630,9 @@ $('imp').onclick=async()=>{
 };
 
 /* ---------- promemoria backup ---------- */
-const BKEY='ricettario-lastbackup',BSNZ='ricettario-bk-snooze',BDAYS=14;
+const BKEY='ricettario-lastbackup',BSNZ='ricettario-bk-snooze',BDAYS=14,BDAYS_RISK=7;
+/* stato dell'archiviazione: persisted=true/false/null(sconosciuto), usage/quota in byte */
+const ST={persisted:null,usage:0,quota:0,warned:false};
 function lastBk(){try{return +localStorage.getItem(BKEY)||0}catch(e){return 0}}
 function markBk(){try{localStorage.setItem(BKEY,String(Date.now()));localStorage.removeItem(BSNZ)}catch(e){}bkHide();updBk()}
 function lastMod(){let m=0;recipes.forEach(r=>{m=Math.max(m,+r.u||0)});Object.keys(deleted).forEach(k=>{m=Math.max(m,+deleted[k]||0)});return m}
@@ -1639,14 +1641,20 @@ function bkDue(){
   const last=lastBk();
   if(!last)return true;
   if(lastMod()<=last)return false;            // nulla di nuovo dall'ultimo backup
-  return Date.now()-last>BDAYS*DAY;
+  return Date.now()-last>(ST.persisted===false?BDAYS_RISK:BDAYS)*DAY;   // dati non protetti dal browser: promemoria più frequente
 }
+function bkMB(b){return b>=1073741824?(b/1073741824).toFixed(1).replace('.',',')+' GB':Math.max(1,Math.round(b/1048576))+' MB'}
 function bkAgo(t){const n=Math.floor((Date.now()-t)/DAY);return n<=0?'oggi':n===1?'ieri':n+' giorni fa'}
 function updBk(){
   const ban=$('bkBan');if(!ban)return;
   const due=bkDue(),last=lastBk();
   $('bkBtn').classList.toggle('due',due);
-  const L=$('bkLast');if(L)L.textContent=last?'Ultimo backup: '+bkAgo(last)+'.':'Non hai ancora salvato nessun backup.';
+  const L=$('bkLast');if(L){
+    let t=last?'Ultimo backup: '+bkAgo(last)+'.':'Non hai ancora salvato nessun backup.';
+    if(ST.persisted===true)t+=' Dati protetti dal browser ✓';
+    else if(ST.persisted===false)t+=' Il browser potrebbe cancellare i dati se serve spazio: fai backup spesso (promemoria ogni '+BDAYS_RISK+' giorni).';
+    if(ST.quota)t+=' Spazio usato: '+bkMB(ST.usage)+' su '+bkMB(ST.quota)+'.';
+    L.textContent=t}
 }
 /* la barra compare una sola volta all'apertura dell'app, poi si nasconde da sola */
 let bkTimer=null;
@@ -1878,7 +1886,36 @@ window.addEventListener('storage',e=>{
   if($('dTrash').open)renderTrash();
   toast('Ricette aggiornate da un\'altra scheda');
 });
-try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().then(ok=>{if(!ok)console.info('Archiviazione persistente non concessa: fai backup regolari.')})}catch(e){}
+/* ---------- archiviazione protetta + spazio ---------- */
+async function stCheck(){
+  try{
+    const sg=navigator.storage;
+    if(sg){
+      if(sg.persisted)ST.persisted=await sg.persisted();
+      if(!ST.persisted&&sg.persist)ST.persisted=await sg.persist();
+      if(sg.estimate){const e=await sg.estimate();ST.usage=e.usage||0;ST.quota=e.quota||0}
+    }
+  }catch(e){}
+  updBk();
+  // avviso una sola volta per sessione se lo spazio sta per finire
+  if(!ST.warned&&ST.quota&&ST.usage/ST.quota>0.8){
+    ST.warned=true;
+    toast('Spazio quasi pieno ('+Math.round(ST.usage/ST.quota*100)+'%): fai un backup ed elimina le foto che non ti servono.');
+  }
+}
+stCheck();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)stCheck()});
+
+/* ---------- uso offline: service worker ----------
+   Serve https (o localhost) e il file sw.js nella stessa cartella di questa pagina.
+   Da file:// o da anteprime il blocco viene saltato senza errori. */
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  const swGo=()=>navigator.serviceWorker.register('sw.js')
+    .then(()=>navigator.serviceWorker.ready)
+    .then(reg=>{if(reg.active)reg.active.postMessage({type:'warm',url:location.href.split('#')[0]})})
+    .catch(()=>{});
+  if(document.readyState==='complete')swGo();else window.addEventListener('load',swGo);
+}
 
 /* conferma al tocco: vibrazione per tutti i pulsanti; avvio timer: vibrazione doppia */
 function fbTick(strong){
